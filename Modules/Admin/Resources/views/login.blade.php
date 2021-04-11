@@ -1,45 +1,38 @@
 @extends('layouts::blank')
 
 @section('content')
-    <!-- [ auth-signin ] start -->
+<!-- [ auth-signin ] start -->
 <div class="auth-wrapper">
-	<div class="auth-content container">
-		<div class="card">
-			<div class="row align-items-center">
-				<div class="col-md-6">
-					<div class="card-body">
-						<img src="{{asset('themes/admin/assets/logo-dark.png')}}" alt="" class="img-fluid mb-4">
-						<h4 class="mb-3 f-w-400">{{ __('Login into your account') }}</h4>
-						<div class="input-group mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text"><i class="feather icon-mail"></i></span>
-							</div>
-							<input type="email" class="form-control" placeholder="Email address">
-						</div>
-						<div class="input-group mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text"><i class="feather icon-lock"></i></span>
-							</div>
-							<input type="password" class="form-control" placeholder="Password">
-						</div>
-						
-						<div class="form-group text-left mt-2">
-							<div class="checkbox checkbox-primary d-inline">
-								<input type="checkbox" name="checkbox-fill-1" id="checkbox-fill-a1" checked="">
-								<label for="checkbox-fill-a1" class="cr"> Save credentials</label>
-							</div>
-						</div>
-						<button class="btn btn-primary mb-4">Login</button>
-						<p class="mb-2 text-muted">Forgot password? <a href="auth-reset-password.html" class="f-w-400">Reset</a></p>
-						<p class="mb-0 text-muted">Don’t have an account? <a href="auth-signup.html" class="f-w-400">Signup</a></p>
-					</div>
-				</div>
-				<div class="col-md-6 d-none d-md-block">
-					<img src="../assets/images/auth-bg.jpg" alt="" class="img-fluid">
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="auth-content container">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <img src="{{asset('themes/admin/assets/images/logo-dark.png')}}" alt="" width="120" class="img-fluid mb-4">
+                        <h4 class="my-3 f-w-400">{{ __('Login into your account') }}</h4>
+                        @include('layouts::components.admin.alerts')
+                        <form method="post" action="{{route('admin.login.post')}}">
+                            @csrf
+                            <div class="input-group mb-2">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="feather icon-mail"></i></span>
+                                </div>
+                                <input type="email" name="email" class="form-control" placeholder="{{__('Email Address')}}" required>
+                            </div>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="feather icon-lock"></i></span>
+                                </div>
+                                <input type="password" name="password" class="form-control" placeholder="{{__('Password')}}" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-block btn-primary mb-4">{{__('Login')}}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- [ auth-signin ] end -->
 @endsection

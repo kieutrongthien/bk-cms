@@ -28,5 +28,6 @@
 
 	<script src="{{asset('themes/admin/assets/js/vendor-all.min.js')}}"></script>
 	<script src="{{asset('themes/admin/assets/plugins/bootstrap/js/bootstrap.min.js')}}"></script>
+	@stack('scripts')
 </body>
 </html>

@@ -30,8 +30,8 @@
 	</div>
 	<!-- [ Pre-loader ] End -->
 
-    @include('layouts::components.navigations')
-    @include('layouts::components.header')
+    @include('layouts::components.admin.navigations')
+    @include('layouts::components.admin.header')
 
 	<!-- [ Main Content ] start -->
 	<div class="pcoded-main-container">

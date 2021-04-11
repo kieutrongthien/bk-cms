@@ -2,5 +2,7 @@
     "Core": true,
     "Admin": true,
     "Layouts": true,
-    "User": true
+    "User": true,
+    "Blog": true,
+    "Settings": true
 }

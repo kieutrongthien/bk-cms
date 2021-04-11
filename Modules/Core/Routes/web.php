@@ -11,6 +11,8 @@
 |
 */
 
-Route::prefix('core')->group(function() {
-    Route::get('/', 'CoreController@index');
+Route::group(['prefix' => 'install', 'middleware' => ['web', 'isNotInstall']], function() {
+    Route::get('/', 'CoreController@installFirst')->name('install');
+    Route::post('/database', 'CoreController@installSecond')->name('install.second');
+    Route::post('/administrator', 'CoreController@installThird')->name('install.third');
 });

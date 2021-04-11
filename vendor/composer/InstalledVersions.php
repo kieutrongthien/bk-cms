@@ -30,7 +30,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '942ce00886b21eb2dac9c19ea8f4d77883494155',
+    'reference' => 'a4127cf3b3760415ae3bfaf13530d75f6f0797a1',
     'name' => 'kieutrongthien/bk-cms',
   ),
   'versions' => 
@@ -192,24 +192,6 @@ private static $installed = array (
       array (
       ),
       'reference' => '01de0fe5f71c70d1930ee9a80385f9cc28e0f63a',
-    ),
-    'gettext/gettext' => 
-    array (
-      'pretty_version' => 'v4.8.4',
-      'version' => '4.8.4.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '58bc0f7f37e78efb0f9758f93d4a0f669f0f84a1',
-    ),
-    'gettext/languages' => 
-    array (
-      'pretty_version' => '2.6.0',
-      'version' => '2.6.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '38ea0482f649e0802e475f0ed19fa993bcb7a618',
     ),
     'graham-campbell/result-type' => 
     array (
@@ -473,6 +455,15 @@ private static $installed = array (
         0 => 'v8.36.2',
       ),
     ),
+    'jackiedo/dotenv-editor' => 
+    array (
+      'pretty_version' => '1.2.0',
+      'version' => '1.2.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'f93690a80915d51552931d9406d79b312da226b9',
+    ),
     'kieutrongthien/bk-cms' => 
     array (
       'pretty_version' => 'dev-master',
@@ -480,7 +471,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '942ce00886b21eb2dac9c19ea8f4d77883494155',
+      'reference' => 'a4127cf3b3760415ae3bfaf13530d75f6f0797a1',
     ),
     'kodova/hamcrest-php' => 
     array (
@@ -1321,15 +1312,6 @@ private static $installed = array (
       array (
       ),
       'reference' => 'b43b05cf43c1b6d849478965062b6ef73e223bb5',
-    ),
-    'tio/laravel' => 
-    array (
-      'pretty_version' => 'v1.15',
-      'version' => '1.15.0.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'e164ac41ee90ba4c38e9ca3ee4506452c7519e87',
     ),
     'vlucas/phpdotenv' => 
     array (

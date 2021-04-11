@@ -5,7 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\Admin\Requests\LoginRequest;
+use Modules\Admin\Http\Requests\LoginRequest;
 
 class AuthController extends Controller
 {
@@ -17,8 +17,8 @@ class AuthController extends Controller
 
     public function handleLogin(LoginRequest $request)
     {
-        if(!auth()->attemp($request->all())) {
-            return redirect()->back()->withErrors(trans('admin::auth.fail'));
+        if(!auth()->attempt($request->only(['email', 'password']))) {
+            return redirect()->back()->withErrors(trans(__('auth.failed')));
         }
 
         return redirect()->route('admin.dashboard');

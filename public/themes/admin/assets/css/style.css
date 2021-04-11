@@ -8574,3 +8574,7 @@ table.dataTable tbody > tr.selected td.select-checkbox:after, table.dataTable tb
 		box-shadow: 0 0 0 0 rgba(4, 169, 245, 0)
 	}
 }
+
+.system-requirements table th, .system-requirements table td {
+    font-size: 20px
+}

@@ -21,9 +21,9 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'def43f6c87e4f8dfd0c9e1b1bab14fe8' => __DIR__ . '/..' . '/symfony/polyfill-iconv/bootstrap.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
+        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
         'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
-        'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '538ca81a9a966a6716601ecf48f4eaef' => __DIR__ . '/..' . '/opis/closure/functions.php',
         'e39a8b23c42d4e1452234d762b03835a' => __DIR__ . '/..' . '/ramsey/uuid/src/functions.php',
@@ -38,7 +38,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         '4a1f389d6ce373bda9e57857d3b61c84' => __DIR__ . '/..' . '/barryvdh/laravel-debugbar/src/helpers.php',
         'ed962a97bd972bc82007176b647d4e36' => __DIR__ . '/..' . '/facade/ignition/src/helpers.php',
         '9f394da3192a168c4633675768d80428' => __DIR__ . '/..' . '/nwidart/laravel-modules/src/helpers.php',
-        '7d52dc5e9bcebd725684297079784bc2' => __DIR__ . '/..' . '/tio/laravel/src/Helpers/translator_functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -61,7 +60,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         ),
         'T' => 
         array (
-            'Tio\\Laravel\\' => 12,
             'TijsVerkoyen\\CssToInlineStyles\\' => 31,
             'Tests\\' => 6,
         ),
@@ -135,6 +133,10 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
             'Laravel\\Tinker\\' => 15,
             'Laravel\\Sail\\' => 13,
         ),
+        'J' => 
+        array (
+            'Jackiedo\\DotenvEditor\\' => 22,
+        ),
         'I' => 
         array (
             'Illuminate\\Support\\' => 19,
@@ -146,8 +148,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
             'GrahamCampbell\\ResultType\\' => 26,
-            'Gettext\\Languages\\' => 18,
-            'Gettext\\' => 8,
         ),
         'F' => 
         array (
@@ -212,10 +212,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
-        ),
-        'Tio\\Laravel\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/tio/laravel/src',
         ),
         'TijsVerkoyen\\CssToInlineStyles\\' => 
         array (
@@ -421,6 +417,10 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         array (
             0 => __DIR__ . '/..' . '/laravel/sail/src',
         ),
+        'Jackiedo\\DotenvEditor\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor',
+        ),
         'Illuminate\\Support\\' => 
         array (
             0 => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Macroable',
@@ -445,14 +445,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'GrahamCampbell\\ResultType\\' => 
         array (
             0 => __DIR__ . '/..' . '/graham-campbell/result-type/src',
-        ),
-        'Gettext\\Languages\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/gettext/languages/src',
-        ),
-        'Gettext\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/gettext/gettext/src',
         ),
         'Fruitcake\\Cors\\' => 
         array (
@@ -1548,68 +1540,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'Fideloper\\Proxy\\TrustedProxyServiceProvider' => __DIR__ . '/..' . '/fideloper/proxy/src/TrustedProxyServiceProvider.php',
         'Fruitcake\\Cors\\CorsServiceProvider' => __DIR__ . '/..' . '/fruitcake/laravel-cors/src/CorsServiceProvider.php',
         'Fruitcake\\Cors\\HandleCors' => __DIR__ . '/..' . '/fruitcake/laravel-cors/src/HandleCors.php',
-        'Gettext\\BaseTranslator' => __DIR__ . '/..' . '/gettext/gettext/src/BaseTranslator.php',
-        'Gettext\\Extractors\\Blade' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Blade.php',
-        'Gettext\\Extractors\\Csv' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Csv.php',
-        'Gettext\\Extractors\\CsvDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/CsvDictionary.php',
-        'Gettext\\Extractors\\Extractor' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Extractor.php',
-        'Gettext\\Extractors\\ExtractorInterface' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/ExtractorInterface.php',
-        'Gettext\\Extractors\\ExtractorMultiInterface' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/ExtractorMultiInterface.php',
-        'Gettext\\Extractors\\Jed' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Jed.php',
-        'Gettext\\Extractors\\JsCode' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/JsCode.php',
-        'Gettext\\Extractors\\Json' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Json.php',
-        'Gettext\\Extractors\\JsonDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/JsonDictionary.php',
-        'Gettext\\Extractors\\Mo' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Mo.php',
-        'Gettext\\Extractors\\PhpArray' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/PhpArray.php',
-        'Gettext\\Extractors\\PhpCode' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/PhpCode.php',
-        'Gettext\\Extractors\\Po' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Po.php',
-        'Gettext\\Extractors\\Twig' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Twig.php',
-        'Gettext\\Extractors\\VueJs' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/VueJs.php',
-        'Gettext\\Extractors\\Xliff' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Xliff.php',
-        'Gettext\\Extractors\\Yaml' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/Yaml.php',
-        'Gettext\\Extractors\\YamlDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Extractors/YamlDictionary.php',
-        'Gettext\\Generators\\Csv' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Csv.php',
-        'Gettext\\Generators\\CsvDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/CsvDictionary.php',
-        'Gettext\\Generators\\Generator' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Generator.php',
-        'Gettext\\Generators\\GeneratorInterface' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/GeneratorInterface.php',
-        'Gettext\\Generators\\Jed' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Jed.php',
-        'Gettext\\Generators\\Json' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Json.php',
-        'Gettext\\Generators\\JsonDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/JsonDictionary.php',
-        'Gettext\\Generators\\Mo' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Mo.php',
-        'Gettext\\Generators\\PhpArray' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/PhpArray.php',
-        'Gettext\\Generators\\Po' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Po.php',
-        'Gettext\\Generators\\Xliff' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Xliff.php',
-        'Gettext\\Generators\\Yaml' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/Yaml.php',
-        'Gettext\\Generators\\YamlDictionary' => __DIR__ . '/..' . '/gettext/gettext/src/Generators/YamlDictionary.php',
-        'Gettext\\GettextTranslator' => __DIR__ . '/..' . '/gettext/gettext/src/GettextTranslator.php',
-        'Gettext\\Languages\\Category' => __DIR__ . '/..' . '/gettext/languages/src/Category.php',
-        'Gettext\\Languages\\CldrData' => __DIR__ . '/..' . '/gettext/languages/src/CldrData.php',
-        'Gettext\\Languages\\Exporter\\Docs' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Docs.php',
-        'Gettext\\Languages\\Exporter\\Exporter' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Exporter.php',
-        'Gettext\\Languages\\Exporter\\Html' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Html.php',
-        'Gettext\\Languages\\Exporter\\Json' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Json.php',
-        'Gettext\\Languages\\Exporter\\Php' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Php.php',
-        'Gettext\\Languages\\Exporter\\Po' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Po.php',
-        'Gettext\\Languages\\Exporter\\Prettyjson' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Prettyjson.php',
-        'Gettext\\Languages\\Exporter\\Xml' => __DIR__ . '/..' . '/gettext/languages/src/Exporter/Xml.php',
-        'Gettext\\Languages\\FormulaConverter' => __DIR__ . '/..' . '/gettext/languages/src/FormulaConverter.php',
-        'Gettext\\Languages\\Language' => __DIR__ . '/..' . '/gettext/languages/src/Language.php',
-        'Gettext\\Merge' => __DIR__ . '/..' . '/gettext/gettext/src/Merge.php',
-        'Gettext\\Translation' => __DIR__ . '/..' . '/gettext/gettext/src/Translation.php',
-        'Gettext\\Translations' => __DIR__ . '/..' . '/gettext/gettext/src/Translations.php',
-        'Gettext\\Translator' => __DIR__ . '/..' . '/gettext/gettext/src/Translator.php',
-        'Gettext\\TranslatorInterface' => __DIR__ . '/..' . '/gettext/gettext/src/TranslatorInterface.php',
-        'Gettext\\Utils\\CsvTrait' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/CsvTrait.php',
-        'Gettext\\Utils\\DictionaryTrait' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/DictionaryTrait.php',
-        'Gettext\\Utils\\FunctionsScanner' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/FunctionsScanner.php',
-        'Gettext\\Utils\\HeadersExtractorTrait' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/HeadersExtractorTrait.php',
-        'Gettext\\Utils\\HeadersGeneratorTrait' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/HeadersGeneratorTrait.php',
-        'Gettext\\Utils\\JsFunctionsScanner' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/JsFunctionsScanner.php',
-        'Gettext\\Utils\\MultidimensionalArrayTrait' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/MultidimensionalArrayTrait.php',
-        'Gettext\\Utils\\ParsedComment' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/ParsedComment.php',
-        'Gettext\\Utils\\ParsedFunction' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/ParsedFunction.php',
-        'Gettext\\Utils\\PhpFunctionsScanner' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/PhpFunctionsScanner.php',
-        'Gettext\\Utils\\StringReader' => __DIR__ . '/..' . '/gettext/gettext/src/Utils/StringReader.php',
         'GrahamCampbell\\ResultType\\Error' => __DIR__ . '/..' . '/graham-campbell/result-type/src/Error.php',
         'GrahamCampbell\\ResultType\\Result' => __DIR__ . '/..' . '/graham-campbell/result-type/src/Result.php',
         'GrahamCampbell\\ResultType\\Success' => __DIR__ . '/..' . '/graham-campbell/result-type/src/Success.php',
@@ -2746,6 +2676,28 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'Illuminate\\View\\ViewFinderInterface' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/View/ViewFinderInterface.php',
         'Illuminate\\View\\ViewName' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/View/ViewName.php',
         'Illuminate\\View\\ViewServiceProvider' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/View/ViewServiceProvider.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvBackupCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvBackupCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvDeleteKeyCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvDeleteKeyCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvGetBackupsCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvGetBackupsCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvGetKeysCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvGetKeysCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvRestoreCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvRestoreCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Commands\\DotenvSetKeyCommand' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Commands/DotenvSetKeyCommand.php',
+        'Jackiedo\\DotenvEditor\\Console\\Traits\\CreateCommandInstanceTrait' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Console/Traits/CreateCommandInstanceTrait.php',
+        'Jackiedo\\DotenvEditor\\Contracts\\DotenvFormatter' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Contracts/DotenvFormatter.php',
+        'Jackiedo\\DotenvEditor\\Contracts\\DotenvReader' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Contracts/DotenvReader.php',
+        'Jackiedo\\DotenvEditor\\Contracts\\DotenvWriter' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Contracts/DotenvWriter.php',
+        'Jackiedo\\DotenvEditor\\DotenvEditor' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/DotenvEditor.php',
+        'Jackiedo\\DotenvEditor\\DotenvEditorServiceProvider' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/DotenvEditorServiceProvider.php',
+        'Jackiedo\\DotenvEditor\\DotenvFormatter' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/DotenvFormatter.php',
+        'Jackiedo\\DotenvEditor\\DotenvReader' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/DotenvReader.php',
+        'Jackiedo\\DotenvEditor\\DotenvWriter' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/DotenvWriter.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\FileNotFoundException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/FileNotFoundException.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\InvalidValueException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/InvalidValueException.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\KeyNotFoundException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/KeyNotFoundException.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\NoBackupAvailableException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/NoBackupAvailableException.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\UnableReadFileException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/UnableReadFileException.php',
+        'Jackiedo\\DotenvEditor\\Exceptions\\UnableWriteToFileException' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Exceptions/UnableWriteToFileException.php',
+        'Jackiedo\\DotenvEditor\\Facades\\DotenvEditor' => __DIR__ . '/..' . '/jackiedo/dotenv-editor/src/Jackiedo/DotenvEditor/Facades/DotenvEditor.php',
         'JsonException' => __DIR__ . '/..' . '/symfony/polyfill-php73/Resources/stubs/JsonException.php',
         'Laravel\\Sail\\Console\\InstallCommand' => __DIR__ . '/..' . '/laravel/sail/src/Console/InstallCommand.php',
         'Laravel\\Sail\\Console\\PublishCommand' => __DIR__ . '/..' . '/laravel/sail/src/Console/PublishCommand.php',
@@ -5400,26 +5352,6 @@ class ComposerStaticInitd6317a1c1bbfc0d6c6236794820ae1e4
         'TijsVerkoyen\\CssToInlineStyles\\Css\\Property\\Property' => __DIR__ . '/..' . '/tijsverkoyen/css-to-inline-styles/src/Css/Property/Property.php',
         'TijsVerkoyen\\CssToInlineStyles\\Css\\Rule\\Processor' => __DIR__ . '/..' . '/tijsverkoyen/css-to-inline-styles/src/Css/Rule/Processor.php',
         'TijsVerkoyen\\CssToInlineStyles\\Css\\Rule\\Rule' => __DIR__ . '/..' . '/tijsverkoyen/css-to-inline-styles/src/Css/Rule/Rule.php',
-        'Tio\\Laravel\\Console\\Commands\\Init' => __DIR__ . '/..' . '/tio/laravel/src/Console/Commands/Init.php',
-        'Tio\\Laravel\\Console\\Commands\\Sync' => __DIR__ . '/..' . '/tio/laravel/src/Console/Commands/Sync.php',
-        'Tio\\Laravel\\Console\\Commands\\SyncAndPurge' => __DIR__ . '/..' . '/tio/laravel/src/Console/Commands/SyncAndPurge.php',
-        'Tio\\Laravel\\Console\\Commands\\SyncAndShowPurgeable' => __DIR__ . '/..' . '/tio/laravel/src/Console/Commands/SyncAndShowPurgeable.php',
-        'Tio\\Laravel\\Facade' => __DIR__ . '/..' . '/tio/laravel/src/Facade.php',
-        'Tio\\Laravel\\GettextPOGenerator' => __DIR__ . '/..' . '/tio/laravel/src/GettextPOGenerator.php',
-        'Tio\\Laravel\\GettextTranslationSaver' => __DIR__ . '/..' . '/tio/laravel/src/GettextTranslationSaver.php',
-        'Tio\\Laravel\\Middleware\\SetLocaleMiddleware' => __DIR__ . '/..' . '/tio/laravel/src/Middleware/SetLocaleMiddleware.php',
-        'Tio\\Laravel\\POExtractor' => __DIR__ . '/..' . '/tio/laravel/src/POExtractor.php',
-        'Tio\\Laravel\\PrettyVarExport' => __DIR__ . '/..' . '/tio/laravel/src/PrettyVarExport.php',
-        'Tio\\Laravel\\ServiceProvider' => __DIR__ . '/..' . '/tio/laravel/src/ServiceProvider.php',
-        'Tio\\Laravel\\Service\\Init' => __DIR__ . '/..' . '/tio/laravel/src/Service/Init.php',
-        'Tio\\Laravel\\Service\\SourceEditSync' => __DIR__ . '/..' . '/tio/laravel/src/Service/SourceEditSync.php',
-        'Tio\\Laravel\\Service\\Sync' => __DIR__ . '/..' . '/tio/laravel/src/Service/Sync.php',
-        'Tio\\Laravel\\SourcePOGenerator' => __DIR__ . '/..' . '/tio/laravel/src/SourcePOGenerator.php',
-        'Tio\\Laravel\\SourceSaver' => __DIR__ . '/..' . '/tio/laravel/src/SourceSaver.php',
-        'Tio\\Laravel\\TargetPOGenerator' => __DIR__ . '/..' . '/tio/laravel/src/TargetPOGenerator.php',
-        'Tio\\Laravel\\TranslationExtractor' => __DIR__ . '/..' . '/tio/laravel/src/TranslationExtractor.php',
-        'Tio\\Laravel\\TranslationIO' => __DIR__ . '/..' . '/tio/laravel/src/TranslationIO.php',
-        'Tio\\Laravel\\TranslationSaver' => __DIR__ . '/..' . '/tio/laravel/src/TranslationSaver.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
         'Webmozart\\Assert\\Assert' => __DIR__ . '/..' . '/webmozart/assert/src/Assert.php',

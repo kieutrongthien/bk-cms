@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \Modules\Core\Http\Middleware\Installation::class
     ];
 
     /**
@@ -53,6 +54,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
+        'isNotInstall' => \Modules\Core\Http\Middleware\IsNotInstall::class,
         'admin' => \Modules\Admin\Http\Middleware\Authenticate::class,
         'user' => \Modules\User\Http\Middleware\Authenticate::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
