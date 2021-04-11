@@ -1,0 +1,6 @@
+{
+    "Core": true,
+    "Admin": true,
+    "Layouts": true,
+    "User": true
+}
