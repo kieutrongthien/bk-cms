@@ -2,6 +2,5 @@
 
 
 return [
-    'name' => 'Admin',
-    'prefix' => 'backend'
+    'name' => 'Admin'
 ];

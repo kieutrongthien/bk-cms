@@ -3,7 +3,7 @@
     "alias": "settings",
     "description": "",
     "keywords": [],
-    "priority": 0,
+    "priority": 3,
     "providers": [
         "Modules\\Settings\\Providers\\SettingsServiceProvider"
     ],

@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'a4127cf3b3760415ae3bfaf13530d75f6f0797a1',
+    'reference' => '2be86da4d1d3f1feb2e06fa1bce69fec541ee214',
     'name' => 'kieutrongthien/bk-cms',
   ),
   'versions' => 
@@ -447,7 +447,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'a4127cf3b3760415ae3bfaf13530d75f6f0797a1',
+      'reference' => '2be86da4d1d3f1feb2e06fa1bce69fec541ee214',
     ),
     'kodova/hamcrest-php' => 
     array (

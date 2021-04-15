@@ -3,6 +3,7 @@
 return [
     'name' => env('APP_NAME', 'BK-CMS'),
     'installed' => env('APP_INSTALLED', false),
+    'admin_prefix' => env('APP_ADMIN_PREFIX', 'admin'),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

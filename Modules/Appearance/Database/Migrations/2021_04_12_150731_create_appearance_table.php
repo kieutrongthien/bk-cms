@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateReactionsTable extends Migration
+class CreateAppearanceTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,10 @@ class CreateReactionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('reactions', function (Blueprint $table) {
+        Schema::create('appearance', function (Blueprint $table) {
             $table->id();
-
+            $table->string('key');
+            $table->text('value');
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ class CreateReactionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('reactions');
+        Schema::dropIfExists('appearance');
     }
 }

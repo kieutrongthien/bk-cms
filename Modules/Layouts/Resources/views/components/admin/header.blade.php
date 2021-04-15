@@ -4,7 +4,7 @@
 		<a class="mobile-menu" id="mobile-collapse1" href="#!"><span></span></a>
 		<a href="{{route('admin.dashboard')}}" class="b-brand">
 			<img src="{{ asset('themes/admin/assets/images/logo.png') }}" alt="" class="logo images" width="120">
-			<img src="{{ asset('themes/admin/assets/images/favicon.png') }}" alt="" class="logo-thumb images">
+			<img src="{{ asset('themes/admin/assets/images/favicon.png') }}" alt="" width="32" class="logo-thumb images">
 		</a>
 	</div>
 	<a class="mobile-menu" id="mobile-header" href="#!">
@@ -46,7 +46,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-1.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-1.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>John Doe</strong><span class="n-time text-muted"><i
@@ -60,7 +60,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-2.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-2.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>Joseph William</strong><span class="n-time text-muted"><i
@@ -71,7 +71,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-3.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-3.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>Sara Soudein</strong><span class="n-time text-muted"><i
@@ -82,7 +82,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-1.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-1.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>Joseph William</strong><span class="n-time text-muted"><i
@@ -93,7 +93,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-3.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-3.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>Sara Soudein</strong><span class="n-time text-muted"><i
@@ -104,7 +104,7 @@
 							</li>
 							<li class="notification">
 								<div class="media">
-									<img class="img-radius" src="../assets/images/user/avatar-1.jpg"
+									<img class="img-radius" src="{{ asset('themes/admin/assets/images/user/avatar-1.jpg') }}"
 										alt="Generic placeholder image">
 									<div class="media-body">
 										<p><strong>Joseph William</strong><span class="n-time text-muted"><i

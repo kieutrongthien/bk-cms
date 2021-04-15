@@ -14,12 +14,16 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="csrf-token" content="{{csrf_token()}}"/>
 
 	<!-- Favicon icon -->
 	<link rel="icon" href="{{asset('themes/admin/assets/images/favicon.png')}}" type="image/x-icon">
 	<link rel="stylesheet" href="{{asset('themes/admin/assets/fonts/fontawesome/css/fontawesome-all.min.css')}}" type="text/css">
 	<link rel="stylesheet" href="{{asset('themes/admin/assets/plugins/animation/css/animate.min.css')}}">
+	<link rel="stylesheet" href="{{asset('themes/admin/assets/css/colorpicker.css')}}">
+	<link rel="stylesheet" href="{{asset('themes/admin/assets/css/sweetalert2.min.css')}}">
 	<link rel="stylesheet" href="{{asset('themes/admin/assets/css/style.css')}}">
+	@stack('styles')
 </head>
 <body>
 	<!-- [ Pre-loader ] start -->
@@ -51,6 +55,11 @@
 
 	<script src="{{asset('themes/admin/assets/js/vendor-all.min.js')}}"></script>
 	<script src="{{asset('themes/admin/assets/plugins/bootstrap/js/bootstrap.min.js')}}"></script>
+	<script src="{{asset('themes/admin/assets/plugins/tinymce/tinymce.min.js')}}"></script>
+	<script src="{{asset('themes/admin/assets/js/colorpicker.js')}}"></script>
+	<script src="{{asset('themes/admin/assets/js/sweetalert2.all.min.js')}}"></script>
 	<script src="{{asset('themes/admin/assets/js/pcoded.min.js')}}"></script>
+	<script src="{{asset('themes/admin/assets/js/main.js')}}"></script>
+	@stack('scripts')
 </body>
 </html>

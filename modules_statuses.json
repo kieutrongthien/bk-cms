@@ -4,5 +4,10 @@
     "Layouts": true,
     "User": true,
     "Blog": true,
-    "Settings": true
+    "Settings": true,
+    "Pages": true,
+    "Appearance": true,
+    "Themes": true,
+    "Menus": true,
+    "LaravelPagebuilder": true
 }
