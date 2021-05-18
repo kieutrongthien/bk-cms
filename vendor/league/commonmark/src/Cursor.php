@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of the league/commonmark package.
  *
@@ -13,11 +11,9 @@ declare(strict_types=1);
 
 namespace League\CommonMark;
 
-use League\CommonMark\Exception\UnexpectedEncodingException;
-
 class Cursor
 {
-    public const INDENT_LEVEL = 4;
+    const INDENT_LEVEL = 4;
 
     /**
      * @var string
@@ -63,33 +59,26 @@ class Cursor
     private $partiallyConsumedTab = false;
 
     /**
-     * @var bool
+     * @param string $line
      */
-    private $lineContainsTabs;
-
-    /**
-     * @var bool
-     */
-    private $isMultibyte;
-
-    /**
-     * @var array<int, string>
-     */
-    private $charCache = [];
-
-    /**
-     * @param string $line The line being parsed (ASCII or UTF-8)
-     */
-    public function __construct(string $line)
+    public function __construct($line)
     {
-        if (!\mb_check_encoding($line, 'UTF-8')) {
-            throw new UnexpectedEncodingException('Unexpected encoding - UTF-8 or ASCII was expected');
-        }
-
         $this->line = $line;
-        $this->length = \mb_strlen($line, 'UTF-8') ?: 0;
-        $this->isMultibyte = $this->length !== \strlen($line);
-        $this->lineContainsTabs = false !== \strpos($line, "\t");
+        $this->length = mb_strlen($line, 'utf-8');
+    }
+
+    /**
+     * Returns the position of the next character which is not a space (or tab)
+     *
+     * @deprecated Use getNextNonSpacePosition() instead
+     *
+     * @return int
+     */
+    public function getFirstNonSpacePosition()
+    {
+        @trigger_error('Cursor::getFirstNonSpacePosition() will be removed in a future 0.x release.  Use getNextNonSpacePosition() instead. See https://github.com/thephpleague/commonmark/issues/280', E_USER_DEPRECATED);
+
+        return $this->getNextNonSpacePosition();
     }
 
     /**
@@ -97,7 +86,7 @@ class Cursor
      *
      * @return int
      */
-    public function getNextNonSpacePosition(): int
+    public function getNextNonSpacePosition()
     {
         if ($this->nextNonSpaceCache !== null) {
             return $this->nextNonSpaceCache;
@@ -127,9 +116,23 @@ class Cursor
     /**
      * Returns the next character which isn't a space (or tab)
      *
+     * @deprecated Use getNextNonSpaceCharacter() instead
+     *
      * @return string
      */
-    public function getNextNonSpaceCharacter(): ?string
+    public function getFirstNonSpaceCharacter()
+    {
+        @trigger_error('Cursor::getFirstNonSpaceCharacter() will be removed in a future 0.x release.  Use getNextNonSpaceCharacter() instead. See https://github.com/thephpleague/commonmark/issues/280', E_USER_DEPRECATED);
+
+        return $this->getNextNonSpaceCharacter();
+    }
+
+    /**
+     * Returns the next character which isn't a space (or tab)
+     *
+     * @return string
+     */
+    public function getNextNonSpaceCharacter()
     {
         return $this->getCharacter($this->getNextNonSpacePosition());
     }
@@ -139,11 +142,9 @@ class Cursor
      *
      * @return int
      */
-    public function getIndent(): int
+    public function getIndent()
     {
-        if ($this->nextNonSpaceCache === null) {
-            $this->getNextNonSpacePosition();
-        }
+        $this->getNextNonSpacePosition();
 
         return $this->indent;
     }
@@ -153,7 +154,7 @@ class Cursor
      *
      * @return bool
      */
-    public function isIndented(): bool
+    public function isIndented()
     {
         return $this->getIndent() >= self::INDENT_LEVEL;
     }
@@ -163,7 +164,7 @@ class Cursor
      *
      * @return string|null
      */
-    public function getCharacter(?int $index = null): ?string
+    public function getCharacter($index = null)
     {
         if ($index === null) {
             $index = $this->currentPosition;
@@ -171,18 +172,10 @@ class Cursor
 
         // Index out-of-bounds, or we're at the end
         if ($index < 0 || $index >= $this->length) {
-            return null;
+            return;
         }
 
-        if ($this->isMultibyte) {
-            if (isset($this->charCache[$index])) {
-                return $this->charCache[$index];
-            }
-
-            return $this->charCache[$index] = \mb_substr($this->line, $index, 1, 'UTF-8');
-        }
-
-        return $this->line[$index];
+        return mb_substr($this->line, $index, 1, 'utf-8');
     }
 
     /**
@@ -192,7 +185,7 @@ class Cursor
      *
      * @return string|null
      */
-    public function peek(int $offset = 1): ?string
+    public function peek($offset = 1)
     {
         return $this->getCharacter($this->currentPosition + $offset);
     }
@@ -202,15 +195,13 @@ class Cursor
      *
      * @return bool
      */
-    public function isBlank(): bool
+    public function isBlank()
     {
-        return $this->nextNonSpaceCache === $this->length || $this->getNextNonSpacePosition() === $this->length;
+        return $this->getNextNonSpacePosition() === $this->length;
     }
 
     /**
      * Move the cursor forwards
-     *
-     * @return void
      */
     public function advance()
     {
@@ -222,10 +213,8 @@ class Cursor
      *
      * @param int  $characters       Number of characters to advance by
      * @param bool $advanceByColumns Whether to advance by columns instead of spaces
-     *
-     * @return void
      */
-    public function advanceBy(int $characters, bool $advanceByColumns = false)
+    public function advanceBy($characters, $advanceByColumns = false)
     {
         if ($characters === 0) {
             $this->previousPosition = $this->currentPosition;
@@ -236,14 +225,11 @@ class Cursor
         $this->previousPosition = $this->currentPosition;
         $this->nextNonSpaceCache = null;
 
+        $nextFewChars = mb_substr($this->line, $this->currentPosition, $characters, 'utf-8');
+
         // Optimization to avoid tab handling logic if we have no tabs
-        if (!$this->lineContainsTabs || false === \strpos(
-            $nextFewChars = $this->isMultibyte ?
-                \mb_substr($this->line, $this->currentPosition, $characters, 'UTF-8') :
-                \substr($this->line, $this->currentPosition, $characters),
-            "\t"
-        )) {
-            $length = \min($characters, $this->length - $this->currentPosition);
+        if (preg_match('/\t/', $nextFewChars) === 0) {
+            $length = min($characters, $this->length - $this->currentPosition);
             $this->partiallyConsumedTab = false;
             $this->currentPosition += $length;
             $this->column += $length;
@@ -253,11 +239,8 @@ class Cursor
 
         if ($characters === 1 && !empty($nextFewChars)) {
             $asArray = [$nextFewChars];
-        } elseif ($this->isMultibyte) {
-            /** @var string[] $asArray */
-            $asArray = \preg_split('//u', $nextFewChars, -1, \PREG_SPLIT_NO_EMPTY);
         } else {
-            $asArray = \str_split($nextFewChars);
+            $asArray = preg_split('//u', $nextFewChars, null, PREG_SPLIT_NO_EMPTY);
         }
 
         foreach ($asArray as $relPos => $c) {
@@ -293,7 +276,7 @@ class Cursor
      *
      * @return bool
      */
-    public function advanceBySpaceOrTab(): bool
+    public function advanceBySpaceOrTab()
     {
         $character = $this->getCharacter();
 
@@ -307,11 +290,55 @@ class Cursor
     }
 
     /**
+     * Advances the cursor while the given character is matched
+     *
+     * @param string   $character                  Character to match
+     * @param int|null $maximumCharactersToAdvance Maximum number of characters to advance before giving up
+     *
+     * @return int Number of positions moved (0 if unsuccessful)
+     */
+    public function advanceWhileMatches($character, $maximumCharactersToAdvance = null)
+    {
+        // Calculate how far to advance
+        $start = $this->currentPosition;
+        $newIndex = $start;
+        if ($maximumCharactersToAdvance === null) {
+            $maximumCharactersToAdvance = $this->length;
+        }
+
+        $max = min($start + $maximumCharactersToAdvance, $this->length);
+
+        while ($newIndex < $max && $this->getCharacter($newIndex) === $character) {
+            ++$newIndex;
+        }
+
+        if ($newIndex <= $start) {
+            return 0;
+        }
+
+        $this->advanceBy($newIndex - $start);
+
+        return $this->currentPosition - $this->previousPosition;
+    }
+
+    /**
+     * Parse zero or more space characters, including at most one newline.
+     *
+     * @deprecated Use advanceToNextNonSpaceOrNewline() instead
+     */
+    public function advanceToFirstNonSpace()
+    {
+        @trigger_error('Cursor::advanceToFirstNonSpace() will be removed in a future 0.x release.  Use advanceToNextNonSpaceOrTab() or advanceToNextNonSpaceOrNewline() instead. See https://github.com/thephpleague/commonmark/issues/280', E_USER_DEPRECATED);
+
+        return $this->advanceToNextNonSpaceOrNewline();
+    }
+
+    /**
      * Parse zero or more space/tab characters
      *
      * @return int Number of positions moved
      */
-    public function advanceToNextNonSpaceOrTab(): int
+    public function advanceToNextNonSpaceOrTab()
     {
         $newPosition = $this->getNextNonSpacePosition();
         $this->advanceBy($newPosition - $this->currentPosition);
@@ -327,23 +354,18 @@ class Cursor
      *
      * @return int Number of positions moved
      */
-    public function advanceToNextNonSpaceOrNewline(): int
+    public function advanceToNextNonSpaceOrNewline()
     {
-        $remainder = $this->getRemainder();
-
-        // Optimization: Avoid the regex if we know there are no spaces or newlines
-        if (empty($remainder) || ($remainder[0] !== ' ' && $remainder[0] !== "\n")) {
-            $this->previousPosition = $this->currentPosition;
-
-            return 0;
-        }
-
         $matches = [];
-        \preg_match('/^ *(?:\n *)?/', $remainder, $matches, \PREG_OFFSET_CAPTURE);
+        preg_match('/^ *(?:\n *)?/', $this->getRemainder(), $matches, PREG_OFFSET_CAPTURE);
 
         // [0][0] contains the matched text
         // [0][1] contains the index of that match
-        $increment = $matches[0][1] + \strlen($matches[0][0]);
+        $increment = $matches[0][1] + strlen($matches[0][0]);
+
+        if ($increment === 0) {
+            return 0;
+        }
 
         $this->advanceBy($increment);
 
@@ -355,7 +377,7 @@ class Cursor
      *
      * @return int The number of characters moved
      */
-    public function advanceToEnd(): int
+    public function advanceToEnd()
     {
         $this->previousPosition = $this->currentPosition;
         $this->nextNonSpaceCache = null;
@@ -365,9 +387,12 @@ class Cursor
         return $this->currentPosition - $this->previousPosition;
     }
 
-    public function getRemainder(): string
+    /**
+     * @return string
+     */
+    public function getRemainder()
     {
-        if ($this->currentPosition >= $this->length) {
+        if ($this->isAtEnd()) {
             return '';
         }
 
@@ -376,22 +401,24 @@ class Cursor
         if ($this->partiallyConsumedTab) {
             $position++;
             $charsToTab = 4 - ($this->column % 4);
-            $prefix = \str_repeat(' ', $charsToTab);
+            $prefix = str_repeat(' ', $charsToTab);
         }
 
-        $subString = $this->isMultibyte ?
-            \mb_substr($this->line, $position, null, 'UTF-8') :
-            \substr($this->line, $position);
-
-        return $prefix . $subString;
+        return $prefix . mb_substr($this->line, $position, null, 'utf-8');
     }
 
-    public function getLine(): string
+    /**
+     * @return string
+     */
+    public function getLine()
     {
         return $this->line;
     }
 
-    public function isAtEnd(): bool
+    /**
+     * @return bool
+     */
+    public function isAtEnd()
     {
         return $this->currentPosition >= $this->length;
     }
@@ -405,97 +432,77 @@ class Cursor
      *
      * @return string|null
      */
-    public function match(string $regex): ?string
+    public function match($regex)
     {
         $subject = $this->getRemainder();
 
-        if (!\preg_match($regex, $subject, $matches, \PREG_OFFSET_CAPTURE)) {
-            return null;
+        $matches = [];
+        if (!preg_match($regex, $subject, $matches, PREG_OFFSET_CAPTURE)) {
+            return;
         }
 
-        // $matches[0][0] contains the matched text
-        // $matches[0][1] contains the index of that match
-
-        if ($this->isMultibyte) {
-            // PREG_OFFSET_CAPTURE always returns the byte offset, not the char offset, which is annoying
-            $offset = \mb_strlen(\substr($subject, 0, $matches[0][1]), 'UTF-8');
-            $matchLength = \mb_strlen($matches[0][0], 'UTF-8');
-        } else {
-            $offset = $matches[0][1];
-            $matchLength = \strlen($matches[0][0]);
-        }
+        // PREG_OFFSET_CAPTURE always returns the byte offset, not the char offset, which is annoying
+        $offset = mb_strlen(mb_strcut($subject, 0, $matches[0][1], 'utf-8'), 'utf-8');
 
         // [0][0] contains the matched text
         // [0][1] contains the index of that match
-        $this->advanceBy($offset + $matchLength);
+        $this->advanceBy($offset + mb_strlen($matches[0][0], 'utf-8'));
 
         return $matches[0][0];
     }
 
     /**
-     * Encapsulates the current state of this cursor in case you need to rollback later.
-     *
-     * WARNING: Do not parse or use the return value for ANYTHING except for
-     * passing it back into restoreState(), as the number of values and their
-     * contents may change in any future release without warning.
-     *
-     * @return array<mixed>
+     * @return CursorState
      */
     public function saveState()
     {
-        return [
+        return new CursorState(
+            $this->line,
+            $this->length,
             $this->currentPosition,
             $this->previousPosition,
             $this->nextNonSpaceCache,
             $this->indent,
             $this->column,
-            $this->partiallyConsumedTab,
-        ];
+            $this->partiallyConsumedTab
+        );
     }
 
     /**
-     * Restore the cursor to a previous state.
-     *
-     * Pass in the value previously obtained by calling saveState().
-     *
-     * @param array<mixed> $state
-     *
-     * @return void
+     * @param CursorState $state
      */
-    public function restoreState($state)
+    public function restoreState(CursorState $state)
     {
-        list(
-            $this->currentPosition,
-            $this->previousPosition,
-            $this->nextNonSpaceCache,
-            $this->indent,
-            $this->column,
-            $this->partiallyConsumedTab,
-          ) = $state;
+        $this->line = $state->getLine();
+        $this->length = $state->getLength();
+        $this->currentPosition = $state->getCurrentPosition();
+        $this->previousPosition = $state->getPreviousPosition();
+        $this->nextNonSpaceCache = $state->getNextNonSpaceCache();
+        $this->column = $state->getColumn();
+        $this->indent = $state->getIndent();
+        $this->partiallyConsumedTab = $state->getPartiallyConsumedTab();
     }
 
-    public function getPosition(): int
+    /**
+     * @return int
+     */
+    public function getPosition()
     {
         return $this->currentPosition;
     }
 
-    public function getPreviousText(): string
+    /**
+     * @return string
+     */
+    public function getPreviousText()
     {
-        return \mb_substr($this->line, $this->previousPosition, $this->currentPosition - $this->previousPosition, 'UTF-8');
+        return mb_substr($this->line, $this->previousPosition, $this->currentPosition - $this->previousPosition, 'utf-8');
     }
 
-    public function getSubstring(int $start, ?int $length = null): string
-    {
-        if ($this->isMultibyte) {
-            return \mb_substr($this->line, $start, $length, 'UTF-8');
-        } elseif ($length !== null) {
-            return \substr($this->line, $start, $length);
-        }
-
-        return \substr($this->line, $start);
-    }
-
-    public function getColumn(): int
+    /**
+     * @return int
+     */
+    public function getColumn()
     {
         return $this->column;
     }

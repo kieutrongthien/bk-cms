@@ -18,7 +18,7 @@ use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 use League\CommonMark\Util\RegexHelper;
 
-class FencedCode extends AbstractStringContainerBlock
+class FencedCode extends AbstractBlock
 {
     /**
      * @var string
@@ -45,7 +45,7 @@ class FencedCode extends AbstractStringContainerBlock
      * @param string $char
      * @param int    $offset
      */
-    public function __construct(int $length, string $char, int $offset)
+    public function __construct($length, $char, $offset)
     {
         parent::__construct();
 
@@ -57,7 +57,7 @@ class FencedCode extends AbstractStringContainerBlock
     /**
      * @return string
      */
-    public function getInfo(): string
+    public function getInfo()
     {
         return $this->info;
     }
@@ -65,15 +65,15 @@ class FencedCode extends AbstractStringContainerBlock
     /**
      * @return string[]
      */
-    public function getInfoWords(): array
+    public function getInfoWords()
     {
-        return \preg_split('/\s+/', $this->info) ?: [];
+        return preg_split('/\s+/', $this->info);
     }
 
     /**
      * @return string
      */
-    public function getChar(): string
+    public function getChar()
     {
         return $this->char;
     }
@@ -83,7 +83,7 @@ class FencedCode extends AbstractStringContainerBlock
      *
      * @return $this
      */
-    public function setChar(string $char): self
+    public function setChar($char)
     {
         $this->char = $char;
 
@@ -93,7 +93,7 @@ class FencedCode extends AbstractStringContainerBlock
     /**
      * @return int
      */
-    public function getLength(): int
+    public function getLength()
     {
         return $this->length;
     }
@@ -103,7 +103,7 @@ class FencedCode extends AbstractStringContainerBlock
      *
      * @return $this
      */
-    public function setLength(int $length): self
+    public function setLength($length)
     {
         $this->length = $length;
 
@@ -113,7 +113,7 @@ class FencedCode extends AbstractStringContainerBlock
     /**
      * @return int
      */
-    public function getOffset(): int
+    public function getOffset()
     {
         return $this->offset;
     }
@@ -123,24 +123,46 @@ class FencedCode extends AbstractStringContainerBlock
      *
      * @return $this
      */
-    public function setOffset(int $offset): self
+    public function setOffset($offset)
     {
         $this->offset = $offset;
 
         return $this;
     }
 
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return true;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return true;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         if ($this->length === -1) {
             if ($cursor->isBlank()) {
@@ -151,39 +173,38 @@ class FencedCode extends AbstractStringContainerBlock
         }
 
         // Skip optional spaces of fence offset
-        $cursor->match('/^ {0,' . $this->offset . '}/');
+        $cursor->advanceWhileMatches(' ', $this->offset);
 
         return true;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
         // first line becomes info string
-        $firstLine = $this->strings->first();
-        if ($firstLine === false) {
-            $firstLine = '';
-        }
-
-        $this->info = RegexHelper::unescape(\trim($firstLine));
+        $this->info = RegexHelper::unescape(trim($this->strings->first()));
 
         if ($this->strings->count() === 1) {
             $this->finalStringContents = '';
         } else {
-            $this->finalStringContents = \implode("\n", $this->strings->slice(1)) . "\n";
+            $this->finalStringContents = implode("\n", $this->strings->slice(1)) . "\n";
         }
     }
 
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
     public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
     {
-        /** @var self $container */
+        /** @var FencedCode $container */
         $container = $context->getContainer();
 
         // check for closing code fence
         if ($cursor->getIndent() <= 3 && $cursor->getNextNonSpaceCharacter() === $container->getChar()) {
             $match = RegexHelper::matchAll('/^(?:`{3,}|~{3,})(?= *$)/', $cursor->getLine(), $cursor->getNextNonSpacePosition());
-            if ($match !== null && \strlen($match[0]) >= $container->getLength()) {
+            if (strlen($match[0]) >= $container->getLength()) {
                 // don't add closing fence to container; instead, close it:
                 $this->setLength(-1); // -1 means we've passed closer
 
@@ -191,10 +212,16 @@ class FencedCode extends AbstractStringContainerBlock
             }
         }
 
-        $container->addLine($cursor->getRemainder());
+        $context->getTip()->addLine($cursor->getRemainder());
     }
 
-    public function shouldLastLineBeBlank(Cursor $cursor, int $currentLineNumber): bool
+    /**
+     * @param Cursor $cursor
+     * @param int    $currentLineNumber
+     *
+     * @return bool
+     */
+    public function shouldLastLineBeBlank(Cursor $cursor, $currentLineNumber)
     {
         return false;
     }

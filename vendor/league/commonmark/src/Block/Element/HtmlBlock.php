@@ -18,9 +18,8 @@ use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 use League\CommonMark\Util\RegexHelper;
 
-class HtmlBlock extends AbstractStringContainerBlock
+class HtmlBlock extends AbstractBlock
 {
-    // Any changes to these constants should be reflected in .phpstorm.meta.php
     const TYPE_1_CODE_CONTAINER = 1;
     const TYPE_2_COMMENT = 2;
     const TYPE_3 = 3;
@@ -37,7 +36,7 @@ class HtmlBlock extends AbstractStringContainerBlock
     /**
      * @param int $type
      */
-    public function __construct(int $type)
+    public function __construct($type)
     {
         parent::__construct();
 
@@ -47,32 +46,52 @@ class HtmlBlock extends AbstractStringContainerBlock
     /**
      * @return int
      */
-    public function getType(): int
+    public function getType()
     {
         return $this->type;
     }
 
     /**
      * @param int $type
-     *
-     * @return void
      */
-    public function setType(int $type)
+    public function setType($type)
     {
         $this->type = $type;
     }
 
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return true;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return true;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         if ($cursor->isBlank() && ($this->type === self::TYPE_6_BLOCK_ELEMENT || $this->type === self::TYPE_7_MISC_ELEMENT)) {
             return false;
@@ -81,18 +100,20 @@ class HtmlBlock extends AbstractStringContainerBlock
         return true;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
-        $this->finalStringContents = \implode("\n", $this->strings->toArray());
+        $this->finalStringContents = implode("\n", $this->getStrings());
     }
 
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
     public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
     {
-        /** @var self $tip */
-        $tip = $context->getTip();
-        $tip->addLine($cursor->getRemainder());
+        $context->getTip()->addLine($cursor->getRemainder());
 
         // Check for end condition
         if ($this->type >= self::TYPE_1_CODE_CONTAINER && $this->type <= self::TYPE_5_CDATA) {

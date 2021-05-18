@@ -17,18 +17,10 @@ namespace League\CommonMark\Block\Element;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 
-/**
- * @method children() AbstractBlock[]
- */
 class ListBlock extends AbstractBlock
 {
-    const TYPE_BULLET = 'bullet';
-    const TYPE_ORDERED = 'ordered';
-
-    /**
-     * @deprecated This constant is deprecated in league/commonmark 1.4 and will be removed in 2.0; use TYPE_BULLET instead
-     */
-    const TYPE_UNORDERED = self::TYPE_BULLET;
+    const TYPE_UNORDERED = 'Bullet';
+    const TYPE_ORDERED = 'Ordered';
 
     /**
      * @var bool
@@ -42,56 +34,79 @@ class ListBlock extends AbstractBlock
 
     public function __construct(ListData $listData)
     {
+        parent::__construct();
+
         $this->listData = $listData;
     }
 
     /**
      * @return ListData
      */
-    public function getListData(): ListData
+    public function getListData()
     {
         return $this->listData;
     }
 
-    public function endsWithBlankLine(): bool
+    /**
+     * @return bool
+     */
+    public function endsWithBlankLine()
     {
         if ($this->lastLineBlank) {
             return true;
         }
 
         if ($this->hasChildren()) {
-            return $this->lastChild() instanceof AbstractBlock && $this->lastChild()->endsWithBlankLine();
+            return $this->lastChild()->endsWithBlankLine();
         }
 
         return false;
     }
 
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return $block instanceof ListItem;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return false;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return false;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         return true;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
         $this->tight = true; // tight by default
 
         foreach ($this->children() as $item) {
-            if (!($item instanceof AbstractBlock)) {
-                continue;
-            }
-
             // check for non-final list item ending with blank line:
             if ($item->endsWithBlankLine() && $item !== $this->lastChild()) {
                 $this->tight = false;
@@ -101,7 +116,7 @@ class ListBlock extends AbstractBlock
             // Recurse into children of list item, to see if there are
             // spaces between any of them:
             foreach ($item->children() as $subItem) {
-                if ($subItem instanceof AbstractBlock && $subItem->endsWithBlankLine() && ($item !== $this->lastChild() || $subItem !== $item->lastChild())) {
+                if ($subItem->endsWithBlankLine() && ($item !== $this->lastChild() || $subItem !== $item->lastChild())) {
                     $this->tight = false;
                     break;
                 }
@@ -109,15 +124,11 @@ class ListBlock extends AbstractBlock
         }
     }
 
-    public function isTight(): bool
+    /**
+     * @return bool
+     */
+    public function isTight()
     {
         return $this->tight;
-    }
-
-    public function setTight(bool $tight): self
-    {
-        $this->tight = $tight;
-
-        return $this;
     }
 }

@@ -15,33 +15,46 @@
 namespace League\CommonMark\Inline\Parser;
 
 use League\CommonMark\Cursor;
-use League\CommonMark\Delimiter\DelimiterInterface;
+use League\CommonMark\Delimiter\Delimiter;
+use League\CommonMark\Delimiter\DelimiterStack;
+use League\CommonMark\Environment;
 use League\CommonMark\EnvironmentAwareInterface;
-use League\CommonMark\EnvironmentInterface;
-use League\CommonMark\Inline\AdjacentTextMerger;
 use League\CommonMark\Inline\Element\AbstractWebResource;
 use League\CommonMark\Inline\Element\Image;
 use League\CommonMark\Inline\Element\Link;
 use League\CommonMark\InlineParserContext;
-use League\CommonMark\Reference\ReferenceInterface;
-use League\CommonMark\Reference\ReferenceMapInterface;
+use League\CommonMark\Reference\Reference;
+use League\CommonMark\Reference\ReferenceMap;
 use League\CommonMark\Util\LinkParserHelper;
 use League\CommonMark\Util\RegexHelper;
 
-final class CloseBracketParser implements InlineParserInterface, EnvironmentAwareInterface
+class CloseBracketParser extends AbstractInlineParser implements EnvironmentAwareInterface
 {
     /**
-     * @var EnvironmentInterface
+     * @var Environment
      */
-    private $environment;
+    protected $environment;
 
-    public function getCharacters(): array
+    /**
+     * @return string[]
+     */
+    public function getCharacters()
     {
         return [']'];
     }
 
-    public function parse(InlineParserContext $inlineContext): bool
+    /**
+     * @param InlineParserContext $inlineContext
+     *
+     * @return bool
+     */
+    public function parse(InlineParserContext $inlineContext)
     {
+        $cursor = $inlineContext->getCursor();
+
+        $startPos = $cursor->getPosition();
+        $previousState = $cursor->saveState();
+
         // Look through stack of delimiters for a [ or !
         $opener = $inlineContext->getDelimiterStack()->searchByCharacter(['[', '!']);
         if ($opener === null) {
@@ -55,12 +68,9 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
             return false;
         }
 
-        $cursor = $inlineContext->getCursor();
+        $isImage = $opener->getChar() === '!';
 
-        $startPos = $cursor->getPosition();
-        $previousState = $cursor->saveState();
-
-        $cursor->advanceBy(1);
+        $cursor->advance();
 
         // Check to see if we have a link/image
         if (!($link = $this->tryParseLink($cursor, $inlineContext->getReferenceMap(), $opener, $startPos))) {
@@ -71,22 +81,20 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
             return false;
         }
 
-        $isImage = $opener->getChar() === '!';
-
         $inline = $this->createInline($link['url'], $link['title'], $isImage);
         $opener->getInlineNode()->replaceWith($inline);
         while (($label = $inline->next()) !== null) {
             $inline->appendChild($label);
         }
 
-        // Process delimiters such as emphasis inside link/image
         $delimiterStack = $inlineContext->getDelimiterStack();
         $stackBottom = $opener->getPrevious();
-        $delimiterStack->processDelimiters($stackBottom, $this->environment->getDelimiterProcessors());
-        $delimiterStack->removeAll($stackBottom);
-
-        // Merge any adjacent Text nodes together
-        AdjacentTextMerger::mergeChildNodes($inline);
+        foreach ($this->environment->getInlineProcessors() as $inlineProcessor) {
+            $inlineProcessor->processInlines($delimiterStack, $stackBottom);
+        }
+        if ($delimiterStack instanceof DelimiterStack) {
+            $delimiterStack->removeAll($stackBottom);
+        }
 
         // processEmphasis will remove this and later delimiters.
         // Now, for a link, we also remove earlier link openers (no links in links)
@@ -97,20 +105,23 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
         return true;
     }
 
-    public function setEnvironment(EnvironmentInterface $environment)
+    /**
+     * @param Environment $environment
+     */
+    public function setEnvironment(Environment $environment)
     {
         $this->environment = $environment;
     }
 
     /**
-     * @param Cursor                $cursor
-     * @param ReferenceMapInterface $referenceMap
-     * @param DelimiterInterface    $opener
-     * @param int                   $startPos
+     * @param Cursor       $cursor
+     * @param ReferenceMap $referenceMap
+     * @param Delimiter    $opener
+     * @param int          $startPos
      *
-     * @return array<string, string>|false
+     * @return array|bool
      */
-    private function tryParseLink(Cursor $cursor, ReferenceMapInterface $referenceMap, DelimiterInterface $opener, int $startPos)
+    protected function tryParseLink(Cursor $cursor, ReferenceMap $referenceMap, Delimiter $opener, $startPos)
     {
         // Check to see if we have a link/image
         // Inline link?
@@ -128,9 +139,9 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
     /**
      * @param Cursor $cursor
      *
-     * @return array<string, string>|false
+     * @return array|bool
      */
-    private function tryParseInlineLinkAndTitle(Cursor $cursor)
+    protected function tryParseInlineLinkAndTitle(Cursor $cursor)
     {
         if ($cursor->getCharacter() !== '(') {
             return false;
@@ -138,7 +149,7 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
 
         $previousState = $cursor->saveState();
 
-        $cursor->advanceBy(1);
+        $cursor->advance();
         $cursor->advanceToNextNonSpaceOrNewline();
         if (($dest = LinkParserHelper::parseLinkDestination($cursor)) === null) {
             $cursor->restoreState($previousState);
@@ -148,58 +159,64 @@ final class CloseBracketParser implements InlineParserInterface, EnvironmentAwar
 
         $cursor->advanceToNextNonSpaceOrNewline();
 
-        $title = '';
+        $title = null;
         // make sure there's a space before the title:
-        if (\preg_match(RegexHelper::REGEX_WHITESPACE_CHAR, $cursor->peek(-1))) {
-            $title = LinkParserHelper::parseLinkTitle($cursor) ?? '';
+        if (preg_match(RegexHelper::REGEX_WHITESPACE_CHAR, $cursor->peek(-1))) {
+            $title = LinkParserHelper::parseLinkTitle($cursor) ?: '';
         }
 
         $cursor->advanceToNextNonSpaceOrNewline();
 
-        if ($cursor->getCharacter() !== ')') {
+        if ($cursor->match('/^\\)/') === null) {
             $cursor->restoreState($previousState);
 
             return false;
         }
 
-        $cursor->advanceBy(1);
-
         return ['url' => $dest, 'title' => $title];
     }
 
-    private function tryParseReference(Cursor $cursor, ReferenceMapInterface $referenceMap, DelimiterInterface $opener, int $startPos): ?ReferenceInterface
+    /**
+     * @param Cursor       $cursor
+     * @param ReferenceMap $referenceMap
+     * @param Delimiter    $opener
+     * @param int          $startPos
+     *
+     * @return Reference|null
+     */
+    protected function tryParseReference(Cursor $cursor, ReferenceMap $referenceMap, Delimiter $opener, $startPos)
     {
-        if ($opener->getIndex() === null) {
-            return null;
-        }
-
         $savePos = $cursor->saveState();
         $beforeLabel = $cursor->getPosition();
         $n = LinkParserHelper::parseLinkLabel($cursor);
         if ($n === 0 || $n === 2) {
-            $start = $opener->getIndex();
-            $length = $startPos - $opener->getIndex();
+            // Empty or missing second label
+            $reflabel = mb_substr($cursor->getLine(), $opener->getIndex(), $startPos - $opener->getIndex(), 'utf-8');
         } else {
-            $start = $beforeLabel + 1;
-            $length = $n - 2;
+            $reflabel = mb_substr($cursor->getLine(), $beforeLabel + 1, $n - 2, 'utf-8');
         }
-
-        $referenceLabel = $cursor->getSubstring($start, $length);
 
         if ($n === 0) {
             // If shortcut reference link, rewind before spaces we skipped
             $cursor->restoreState($savePos);
         }
 
-        return $referenceMap->getReference($referenceLabel);
+        return $referenceMap->getReference($reflabel);
     }
 
-    private function createInline(string $url, string $title, bool $isImage): AbstractWebResource
+    /**
+     * @param string $url
+     * @param string $title
+     * @param bool   $isImage
+     *
+     * @return AbstractWebResource
+     */
+    protected function createInline($url, $title, $isImage)
     {
         if ($isImage) {
             return new Image($url, null, $title);
+        } else {
+            return new Link($url, null, $title);
         }
-
-        return new Link($url, null, $title);
     }
 }

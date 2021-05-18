@@ -19,7 +19,7 @@ use League\CommonMark\Block\Element\ListBlock;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\HtmlElement;
 
-final class ListBlockRenderer implements BlockRendererInterface
+class ListBlockRenderer implements BlockRendererInterface
 {
     /**
      * @param ListBlock                $block
@@ -28,17 +28,20 @@ final class ListBlockRenderer implements BlockRendererInterface
      *
      * @return HtmlElement
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof ListBlock)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
         $listData = $block->getListData();
 
-        $tag = $listData->type === ListBlock::TYPE_BULLET ? 'ul' : 'ol';
+        $tag = $listData->type === ListBlock::TYPE_UNORDERED ? 'ul' : 'ol';
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         if ($listData->start !== null && $listData->start !== 1) {
             $attrs['start'] = (string) $listData->start;

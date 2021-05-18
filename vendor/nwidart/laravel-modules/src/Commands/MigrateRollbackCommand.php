@@ -27,14 +27,14 @@ class MigrateRollbackCommand extends Command
     protected $description = 'Rollback the modules migrations.';
 
     /**
-     * @var \Nwidart\Modules\Contracts\RepositoryInterface
+     * @var \Nwidart\Modules\Repository
      */
     protected $module;
 
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $this->module = $this->laravel['modules'];
 
@@ -43,7 +43,7 @@ class MigrateRollbackCommand extends Command
         if (!empty($name)) {
             $this->rollback($name);
 
-            return 0;
+            return;
         }
 
         foreach ($this->module->getOrdered($this->option('direction')) as $module) {
@@ -51,8 +51,6 @@ class MigrateRollbackCommand extends Command
 
             $this->rollback($module);
         }
-
-        return 0;
     }
 
     /**
@@ -66,7 +64,7 @@ class MigrateRollbackCommand extends Command
             $module = $this->module->findOrFail($module);
         }
 
-        $migrator = new Migrator($module, $this->getLaravel());
+        $migrator = new Migrator($module);
 
         $database = $this->option('database');
 

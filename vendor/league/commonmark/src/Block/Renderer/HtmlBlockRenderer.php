@@ -17,14 +17,14 @@ namespace League\CommonMark\Block\Renderer;
 use League\CommonMark\Block\Element\AbstractBlock;
 use League\CommonMark\Block\Element\HtmlBlock;
 use League\CommonMark\ElementRendererInterface;
-use League\CommonMark\EnvironmentInterface;
+use League\CommonMark\Environment;
+use League\CommonMark\Util\Configuration;
 use League\CommonMark\Util\ConfigurationAwareInterface;
-use League\CommonMark\Util\ConfigurationInterface;
 
-final class HtmlBlockRenderer implements BlockRendererInterface, ConfigurationAwareInterface
+class HtmlBlockRenderer implements BlockRendererInterface, ConfigurationAwareInterface
 {
     /**
-     * @var ConfigurationInterface
+     * @var Configuration
      */
     protected $config;
 
@@ -35,24 +35,32 @@ final class HtmlBlockRenderer implements BlockRendererInterface, ConfigurationAw
      *
      * @return string
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof HtmlBlock)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
-        if ($this->config->get('html_input') === EnvironmentInterface::HTML_INPUT_STRIP) {
+        // Kept for BC reasons
+        if ($this->config->getConfig('safe') === true) {
             return '';
         }
 
-        if ($this->config->get('html_input') === EnvironmentInterface::HTML_INPUT_ESCAPE) {
-            return \htmlspecialchars($block->getStringContent(), \ENT_NOQUOTES);
+        if ($this->config->getConfig('html_input') === Environment::HTML_INPUT_STRIP) {
+            return '';
+        }
+
+        if ($this->config->getConfig('html_input') === Environment::HTML_INPUT_ESCAPE) {
+            return htmlspecialchars($block->getStringContent(), ENT_NOQUOTES);
         }
 
         return $block->getStringContent();
     }
 
-    public function setConfiguration(ConfigurationInterface $configuration)
+    /**
+     * @param Configuration $configuration
+     */
+    public function setConfiguration(Configuration $configuration)
     {
         $this->config = $configuration;
     }

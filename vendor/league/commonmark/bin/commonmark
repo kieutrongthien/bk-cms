@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-trigger_error('The "bin/commonmark" command has been deprecated since league/commonmark 1.4', E_USER_DEPRECATED);
-
 requireAutoloader();
 
 ini_set('display_errors', 'stderr');
@@ -17,14 +15,11 @@ $options_raw = getopt('', array(
 ));
 foreach ($options_raw as $option => $value) {
     switch ($option) {
-        case 'safe':
-            $options['html_input'] = 'strip';
-            $options['allow_unsafe_links'] = false;
-            break;
         case 'use-asterisk':
         case 'use-underscore':
         case 'enable-strong':
         case 'enable-em':
+        case 'safe':
             if ($value !== true && $value !== false) {
                 fail("Invalid value '$value' for option '$option'");
             }
@@ -43,10 +38,6 @@ foreach ($argv as $i => $arg) {
             case '-h':
             case '--help':
                 echo getHelpText();
-                exit(0);
-            case '-v':
-            case '--version':
-                echo \League\CommonMark\CommonMarkConverter::VERSION . "\n";
                 exit(0);
             case '--safe':
                 $options['safe'] = true;
@@ -99,9 +90,7 @@ CommonMark - Markdown done right
 
 Usage: commonmark [OPTIONS] [FILE]
 
-    -h, --help    Shows help and usage information
-
-    -v, --version Shows the currently installed version
+    -h, --help  Shows help and usage information
 
     (Reading data from STDIN is not currently supported on Windows)
 
@@ -124,11 +113,9 @@ CommonMark - Markdown done right
 
 Usage: commonmark [OPTIONS] [FILE]
 
-    -h, --help    Shows help and usage information
+    -h, --help  Shows help and usage information
 
-    -v, --version Shows the currently installed version
-
-    --safe        Escapes all raw HTML input and removes unsafe URLs
+    --safe      Escapes all raw HTML input and removes unsafe URLs
 
     If no file is given, input will be read from STDIN
 

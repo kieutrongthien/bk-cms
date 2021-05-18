@@ -4,7 +4,7 @@ namespace Nwidart\Modules\Process;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use Nwidart\Modules\Contracts\RepositoryInterface;
+use Nwidart\Modules\Repository;
 use Symfony\Component\Process\Process;
 
 class Installer
@@ -25,7 +25,8 @@ class Installer
 
     /**
      * The module repository instance.
-     * @var \Nwidart\Modules\Contracts\RepositoryInterface
+     *
+     * @var \Nwidart\Modules\Repository
      */
     protected $repository;
 
@@ -49,14 +50,6 @@ class Installer
      * @var int
      */
     protected $timeout = 3360;
-    /**
-     * @var null|string
-     */
-    private $type;
-    /**
-     * @var bool
-     */
-    private $tree;
 
     /**
      * The constructor.
@@ -90,10 +83,12 @@ class Installer
 
     /**
      * Set the module repository instance.
-     * @param \Nwidart\Modules\Contracts\RepositoryInterface $repository
+     *
+     * @param \Nwidart\Modules\Repository $repository
+     *
      * @return $this
      */
-    public function setRepository(RepositoryInterface $repository)
+    public function setRepository(Repository $repository)
     {
         $this->repository = $repository;
 
@@ -261,7 +256,7 @@ class Installer
      */
     public function installViaGit()
     {
-        return Process::fromShellCommandline(sprintf(
+        return new Process(sprintf(
             'cd %s && git clone %s %s && cd %s && git checkout %s',
             base_path(),
             $this->getRepoUrl(),
@@ -278,7 +273,7 @@ class Installer
      */
     public function installViaSubtree()
     {
-        return Process::fromShellCommandline(sprintf(
+        return new Process(sprintf(
             'cd %s && git remote add %s %s && git subtree add --prefix=%s --squash %s %s',
             base_path(),
             $this->getModuleName(),
@@ -296,7 +291,7 @@ class Installer
      */
     public function installViaComposer()
     {
-        return Process::fromShellCommandline(sprintf(
+        return new Process(sprintf(
             'cd %s && composer require %s',
             base_path(),
             $this->getPackageName()

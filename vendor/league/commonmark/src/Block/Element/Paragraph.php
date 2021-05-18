@@ -17,19 +17,41 @@ namespace League\CommonMark\Block\Element;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 
-class Paragraph extends AbstractStringContainerBlock implements InlineContainerInterface
+class Paragraph extends AbstractBlock implements InlineContainer
 {
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
+    {
+        return true;
+    }
+
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
     {
         return false;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    public function matchesNextLine(Cursor $cursor)
     {
         if ($cursor->isBlank()) {
             $this->lastLineBlank = true;
@@ -40,11 +62,11 @@ class Paragraph extends AbstractStringContainerBlock implements InlineContainerI
         return true;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
-        $this->finalStringContents = \preg_replace('/^  */m', '', \implode("\n", $this->getStrings()));
+        $this->finalStringContents = preg_replace('/^  */m', '', implode("\n", $this->getStrings()));
 
         // Short-circuit
         if ($this->finalStringContents === '' || $this->finalStringContents[0] !== '[') {
@@ -79,20 +101,13 @@ class Paragraph extends AbstractStringContainerBlock implements InlineContainerI
         return $referenceFound;
     }
 
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
     public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
     {
         $cursor->advanceToNextNonSpaceOrTab();
-
-        /** @var self $tip */
-        $tip = $context->getTip();
-        $tip->addLine($cursor->getRemainder());
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getStrings(): array
-    {
-        return $this->strings->toArray();
+        $context->getTip()->addLine($cursor->getRemainder());
     }
 }

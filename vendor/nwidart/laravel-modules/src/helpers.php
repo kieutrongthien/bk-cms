@@ -1,11 +1,11 @@
 <?php
 
 if (! function_exists('module_path')) {
-    function module_path($name, $path = '')
+    function module_path($name)
     {
         $module = app('modules')->find($name);
 
-        return $module->getPath() . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+        return $module->getPath();
     }
 }
 
@@ -18,7 +18,7 @@ if (! function_exists('config_path')) {
      */
     function config_path($path = '')
     {
-        return app()->basePath() . '/config' . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+        return app()->basePath() . '/config' . ($path ? '/' . $path : $path);
     }
 }
 

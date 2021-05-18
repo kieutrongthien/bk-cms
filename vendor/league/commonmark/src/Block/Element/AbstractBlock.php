@@ -17,20 +17,29 @@ namespace League\CommonMark\Block\Element;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 use League\CommonMark\Node\Node;
+use League\CommonMark\Util\ArrayCollection;
 
 /**
  * Block-level element
- *
- * @method parent() ?AbstractBlock
  */
 abstract class AbstractBlock extends Node
 {
     /**
      * Used for storage of arbitrary data.
      *
-     * @var array<string, mixed>
+     * @var array
      */
     public $data = [];
+
+    /**
+     * @var ArrayCollection|string[]
+     */
+    protected $strings;
+
+    /**
+     * @var string
+     */
+    protected $finalStringContents = '';
 
     /**
      * @var bool
@@ -45,13 +54,24 @@ abstract class AbstractBlock extends Node
     /**
      * @var int
      */
-    protected $startLine = 0;
+    protected $startLine;
 
     /**
      * @var int
      */
-    protected $endLine = 0;
+    protected $endLine;
 
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->strings = new ArrayCollection();
+    }
+
+    /**
+     * @param Node|null $node
+     */
     protected function setParent(Node $node = null)
     {
         if ($node && !$node instanceof self) {
@@ -61,7 +81,10 @@ abstract class AbstractBlock extends Node
         parent::setParent($node);
     }
 
-    public function isContainer(): bool
+    /**
+     * @return bool
+     */
+    public function isContainer()
     {
         return true;
     }
@@ -69,9 +92,9 @@ abstract class AbstractBlock extends Node
     /**
      * @return bool
      */
-    public function hasChildren(): bool
+    public function hasChildren()
     {
-        return $this->firstChild !== null;
+        return !is_null($this->firstChild);
     }
 
     /**
@@ -81,31 +104,47 @@ abstract class AbstractBlock extends Node
      *
      * @return bool
      */
-    abstract public function canContain(AbstractBlock $block): bool;
+    abstract public function canContain(AbstractBlock $block);
+
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    abstract public function acceptsLines();
 
     /**
      * Whether this is a code block
      *
-     * Code blocks are extra-greedy - they'll try to consume all subsequent
-     * lines of content without calling matchesNextLine() each time.
-     *
      * @return bool
      */
-    abstract public function isCode(): bool;
+    abstract public function isCode();
 
     /**
      * @param Cursor $cursor
      *
      * @return bool
      */
-    abstract public function matchesNextLine(Cursor $cursor): bool;
+    abstract public function matchesNextLine(Cursor $cursor);
+
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
+    public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
+    {
+        // create paragraph container for line
+        $context->addBlock(new Paragraph());
+        $cursor->advanceToNextNonSpaceOrTab();
+        $context->getTip()->addLine($cursor->getRemainder());
+    }
 
     /**
      * @param int $startLine
      *
      * @return $this
      */
-    public function setStartLine(int $startLine)
+    public function setStartLine($startLine)
     {
         $this->startLine = $startLine;
         if (empty($this->endLine)) {
@@ -118,17 +157,12 @@ abstract class AbstractBlock extends Node
     /**
      * @return int
      */
-    public function getStartLine(): int
+    public function getStartLine()
     {
         return $this->startLine;
     }
 
-    /**
-     * @param int $endLine
-     *
-     * @return $this
-     */
-    public function setEndLine(int $endLine)
+    public function setEndLine($endLine)
     {
         $this->endLine = $endLine;
 
@@ -138,7 +172,7 @@ abstract class AbstractBlock extends Node
     /**
      * @return int
      */
-    public function getEndLine(): int
+    public function getEndLine()
     {
         return $this->endLine;
     }
@@ -148,17 +182,15 @@ abstract class AbstractBlock extends Node
      *
      * @return bool
      */
-    public function endsWithBlankLine(): bool
+    public function endsWithBlankLine()
     {
         return $this->lastLineBlank;
     }
 
     /**
      * @param bool $blank
-     *
-     * @return void
      */
-    public function setLastLineBlank(bool $blank)
+    public function setLastLineBlank($blank)
     {
         $this->lastLineBlank = $blank;
     }
@@ -171,9 +203,29 @@ abstract class AbstractBlock extends Node
      *
      * @return bool
      */
-    public function shouldLastLineBeBlank(Cursor $cursor, int $currentLineNumber): bool
+    public function shouldLastLineBeBlank(Cursor $cursor, $currentLineNumber)
     {
         return $cursor->isBlank();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getStrings()
+    {
+        return $this->strings->toArray();
+    }
+
+    /**
+     * @param string $line
+     */
+    public function addLine($line)
+    {
+        if (!$this->acceptsLines()) {
+            throw new \LogicException('You cannot add lines to a block which cannot accept them');
+        }
+
+        $this->strings->add($line);
     }
 
     /**
@@ -181,7 +233,7 @@ abstract class AbstractBlock extends Node
      *
      * @return bool
      */
-    public function isOpen(): bool
+    public function isOpen()
     {
         return $this->open;
     }
@@ -191,22 +243,25 @@ abstract class AbstractBlock extends Node
      *
      * @param ContextInterface $context
      * @param int              $endLineNumber
-     *
-     * @return void
      */
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         if (!$this->open) {
-            return;
+            return; // TODO: Throw AlreadyClosedException?
         }
 
         $this->open = false;
         $this->endLine = $endLineNumber;
 
-        // This should almost always be true
-        if ($context->getTip() !== null) {
-            $context->setTip($context->getTip()->parent());
-        }
+        $context->setTip($context->getTip()->parent());
+    }
+
+    /**
+     * @return string
+     */
+    public function getStringContent()
+    {
+        return $this->finalStringContents;
     }
 
     /**
@@ -215,8 +270,8 @@ abstract class AbstractBlock extends Node
      *
      * @return mixed
      */
-    public function getData(string $key, $default = null)
+    public function getData($key, $default = null)
     {
-        return \array_key_exists($key, $this->data) ? $this->data[$key] : $default;
+        return array_key_exists($key, $this->data) ? $this->data[$key] : $default;
     }
 }

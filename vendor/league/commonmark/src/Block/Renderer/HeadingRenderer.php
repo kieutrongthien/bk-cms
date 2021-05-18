@@ -19,7 +19,7 @@ use League\CommonMark\Block\Element\Heading;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\HtmlElement;
 
-final class HeadingRenderer implements BlockRendererInterface
+class HeadingRenderer implements BlockRendererInterface
 {
     /**
      * @param Heading                  $block
@@ -28,15 +28,18 @@ final class HeadingRenderer implements BlockRendererInterface
      *
      * @return HtmlElement
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof Heading)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
         $tag = 'h' . $block->getLevel();
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         return new HtmlElement($tag, $attrs, $htmlRenderer->renderInlines($block->children()));
     }

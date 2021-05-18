@@ -5,6 +5,9 @@
  *
  * (c) Colin O'Dell <colinodell@gmail.com>
  *
+ * Original code based on the CommonMark JS reference parser (https://bitly.com/commonmark-js)
+ *  - (c) John MacFarlane
+ *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
@@ -13,37 +16,31 @@ namespace League\CommonMark;
 
 /**
  * Converts CommonMark-compatible Markdown to HTML.
- *
- * @deprecated This class is deprecated since league/commonmark 1.4, use CommonMarkConverter instead.
  */
-class Converter implements ConverterInterface
+class Converter
 {
     /**
      * The document parser instance.
      *
-     * @var DocParserInterface
+     * @var \League\CommonMark\DocParser
      */
     protected $docParser;
 
     /**
      * The html renderer instance.
      *
-     * @var ElementRendererInterface
+     * @var \League\CommonMark\ElementRendererInterface
      */
     protected $htmlRenderer;
 
     /**
      * Create a new commonmark converter instance.
      *
-     * @param DocParserInterface       $docParser
+     * @param DocParser                $docParser
      * @param ElementRendererInterface $htmlRenderer
      */
-    public function __construct(DocParserInterface $docParser, ElementRendererInterface $htmlRenderer)
+    public function __construct(DocParser $docParser, ElementRendererInterface $htmlRenderer)
     {
-        if (!($this instanceof CommonMarkConverter)) {
-            @trigger_error(sprintf('The %s class is deprecated since league/commonmark 1.4, use %s instead.', self::class, CommonMarkConverter::class), E_USER_DEPRECATED);
-        }
-
         $this->docParser = $docParser;
         $this->htmlRenderer = $htmlRenderer;
     }
@@ -53,13 +50,11 @@ class Converter implements ConverterInterface
      *
      * @param string $commonMark
      *
-     * @throws \RuntimeException
-     *
      * @return string
      *
      * @api
      */
-    public function convertToHtml(string $commonMark): string
+    public function convertToHtml($commonMark)
     {
         $documentAST = $this->docParser->parse($commonMark);
 
@@ -71,13 +66,11 @@ class Converter implements ConverterInterface
      *
      * @see Converter::convertToHtml
      *
-     * @param string $commonMark
-     *
-     * @throws \RuntimeException
+     * @param $commonMark
      *
      * @return string
      */
-    public function __invoke(string $commonMark): string
+    public function __invoke($commonMark)
     {
         return $this->convertToHtml($commonMark);
     }

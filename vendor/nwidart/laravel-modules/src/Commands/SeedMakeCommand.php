@@ -100,16 +100,4 @@ class SeedMakeCommand extends GeneratorCommand
 
         return Str::studly($this->argument('name')) . $end;
     }
-
-    /**
-     * Get default namespace.
-     *
-     * @return string
-     */
-    public function getDefaultNamespace() : string
-    {
-        $module = $this->laravel['modules'];
-
-        return $module->config('paths.generator.seeder.namespace') ?: $module->config('paths.generator.seeder.path', 'Database/Seeders');
-    }
 }

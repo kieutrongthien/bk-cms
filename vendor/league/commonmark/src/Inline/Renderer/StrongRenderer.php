@@ -19,7 +19,7 @@ use League\CommonMark\HtmlElement;
 use League\CommonMark\Inline\Element\AbstractInline;
 use League\CommonMark\Inline\Element\Strong;
 
-final class StrongRenderer implements InlineRendererInterface
+class StrongRenderer implements InlineRendererInterface
 {
     /**
      * @param Strong                   $inline
@@ -30,10 +30,13 @@ final class StrongRenderer implements InlineRendererInterface
     public function render(AbstractInline $inline, ElementRendererInterface $htmlRenderer)
     {
         if (!($inline instanceof Strong)) {
-            throw new \InvalidArgumentException('Incompatible inline type: ' . \get_class($inline));
+            throw new \InvalidArgumentException('Incompatible inline type: ' . get_class($inline));
         }
 
-        $attrs = $inline->getData('attributes', []);
+        $attrs = [];
+        foreach ($inline->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         return new HtmlElement('strong', $attrs, $htmlRenderer->renderInlines($inline->children()));
     }

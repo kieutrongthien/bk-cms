@@ -2,12 +2,11 @@
 
 namespace Nwidart\Modules\Commands;
 
-use ErrorException;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Str;
-use Nwidart\Modules\Contracts\RepositoryInterface;
 use Nwidart\Modules\Module;
+use Nwidart\Modules\Repository;
 use Nwidart\Modules\Support\Config\GenerateConfigReader;
 use Nwidart\Modules\Traits\ModuleCommandTrait;
 use RuntimeException;
@@ -34,8 +33,9 @@ class SeedCommand extends Command
 
     /**
      * Execute the console command.
+     * @throws FatalThrowableError
      */
-    public function handle() : int
+    public function handle()
     {
         try {
             if ($name = $this->argument('module')) {
@@ -46,31 +46,25 @@ class SeedCommand extends Command
                 array_walk($modules, [$this, 'moduleSeed']);
                 $this->info('All modules seeded.');
             }
-        } catch (\Error $e) {
-            $e = new ErrorException($e->getMessage(), $e->getCode(), 1, $e->getFile(), $e->getLine(), $e);
+        } catch (\Throwable $e) {
             $this->reportException($e);
+
             $this->renderException($this->getOutput(), $e);
 
-            return E_ERROR;
-        } catch (\Exception $e) {
-            $this->reportException($e);
-            $this->renderException($this->getOutput(), $e);
-
-            return E_ERROR;
+            return 1;
         }
-
-        return 0;
     }
 
     /**
      * @throws RuntimeException
-     * @return RepositoryInterface
+     *
+     * @return Repository
      */
-    public function getModuleRepository(): RepositoryInterface
+    public function getModuleRepository()
     {
         $modules = $this->laravel['modules'];
-        if (!$modules instanceof RepositoryInterface) {
-            throw new RuntimeException('Module repository not found!');
+        if (!$modules instanceof Repository) {
+            throw new RuntimeException("Module repository not found!");
         }
 
         return $modules;
@@ -90,7 +84,7 @@ class SeedCommand extends Command
             throw new RuntimeException("Module [$name] does not exists.");
         }
 
-        return $modules->find($name);
+        return $modules->get($name);
     }
 
     /**
@@ -113,14 +107,6 @@ class SeedCommand extends Command
             $class = $this->getSeederName($name); //legacy support
             if (class_exists($class)) {
                 $seeders[] = $class;
-            } else {
-                //look at other namespaces
-                $classes = $this->getSeederNames($name);
-                foreach ($classes as $class) {
-                    if (class_exists($class)) {
-                        $seeders[] = $class;
-                    }
-                }
             }
         }
 
@@ -137,11 +123,9 @@ class SeedCommand extends Command
      */
     protected function dbSeed($className)
     {
-        if ($option = $this->option('class')) {
-            $params['--class'] = Str::finish(substr($className, 0, strrpos($className, '\\')), '\\') . $option;
-        } else {
-            $params = ['--class' => $className];
-        }
+        $params = [
+            '--class' => $className,
+        ];
 
         if ($option = $this->option('database')) {
             $params['--database'] = $option;
@@ -166,40 +150,17 @@ class SeedCommand extends Command
         $name = Str::studly($name);
 
         $namespace = $this->laravel['modules']->config('namespace');
-        $config = GenerateConfigReader::read('seeder');
-        $seederPath = str_replace('/', '\\', $config->getPath());
-
-        return $namespace . '\\' . $name . '\\' . $seederPath . '\\' . $name . 'DatabaseSeeder';
-    }
-
-    /**
-     * Get master database seeder name for the specified module under a different namespace than Modules.
-     *
-     * @param string $name
-     *
-     * @return array $foundModules array containing namespace paths
-     */
-    public function getSeederNames($name)
-    {
-        $name = Str::studly($name);
-
         $seederPath = GenerateConfigReader::read('seeder');
         $seederPath = str_replace('/', '\\', $seederPath->getPath());
 
-        $foundModules = [];
-        foreach ($this->laravel['modules']->config('scan.paths') as $path) {
-            $namespace = array_slice(explode('/', $path), -1)[0];
-            $foundModules[] = $namespace . '\\' . $name . '\\' . $seederPath . '\\' . $name . 'DatabaseSeeder';
-        }
-
-        return $foundModules;
+        return $namespace . '\\' . $name . '\\' . $seederPath . '\\' . $name . 'DatabaseSeeder';
     }
 
     /**
      * Report the exception to the exception handler.
      *
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
-     * @param  \Throwable  $e
+     * @param  \Exception  $e
      * @return void
      */
     protected function renderException($output, \Exception $e)
@@ -210,7 +171,7 @@ class SeedCommand extends Command
     /**
      * Report the exception to the exception handler.
      *
-     * @param  \Throwable  $e
+     * @param  \Exception  $e
      * @return void
      */
     protected function reportException(\Exception $e)
@@ -238,7 +199,6 @@ class SeedCommand extends Command
     protected function getOptions()
     {
         return [
-            ['class', null, InputOption::VALUE_OPTIONAL, 'The class name of the root seeder.'],
             ['database', null, InputOption::VALUE_OPTIONAL, 'The database connection to seed.'],
             ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when in production.'],
         ];

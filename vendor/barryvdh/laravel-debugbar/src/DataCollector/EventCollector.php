@@ -1,5 +1,4 @@
 <?php
-
 namespace Barryvdh\Debugbar\DataCollector;
 
 use Barryvdh\Debugbar\DataFormatter\SimpleFormatter;
@@ -30,6 +29,7 @@ class EventCollector extends TimeDataCollector
 
         // Find all listeners for the current event
         foreach ($this->events->getListeners($name) as $i => $listener) {
+
             // Check if it's an object + method name
             if (is_array($listener) && count($listener) > 1 && is_object($listener[0])) {
                 list($class, $method) = $listener;
@@ -53,8 +53,7 @@ class EventCollector extends TimeDataCollector
 
                 // Format the closure to a readable format
                 $filename = ltrim(str_replace(base_path(), '', $reflector->getFileName()), '/');
-                $lines = $reflector->getStartLine() . '-' . $reflector->getEndLine();
-                $listener = $reflector->getName() . ' (' . $filename . ':' . $lines . ')';
+                $listener = $reflector->getName() . ' (' . $filename . ':' . $reflector->getStartLine() . '-' . $reflector->getEndLine() . ')';
             } else {
                 // Not sure if this is possible, but to prevent edge cases
                 $listener = $this->getDataFormatter()->formatVar($listener);

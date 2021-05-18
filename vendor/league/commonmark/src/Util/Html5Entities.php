@@ -14,18 +14,8 @@
 
 namespace League\CommonMark\Util;
 
-@trigger_error(sprintf('The "%s" class is deprecated since league/commonmark 1.1, use "%s" instead.', Html5Entities::class, Html5EntityDecoder::class), E_USER_DEPRECATED);
-
-/**
- * @deprecated Use Html5EntityDecoder instead
- */
-final class Html5Entities
+class Html5Entities
 {
-    /**
-     * @deprecated
-     *
-     * @var array<string, string>
-     */
     public static $entitiesByName = [
         'Aacute'                          => 'Á',
         'Aacut'                           => 'Á',
@@ -2256,22 +2246,35 @@ final class Html5Entities
      * @param string $entity
      *
      * @return string
-     *
-     * @deprecated Use Html5EntityDecoder::decode() instead
      */
-    public static function decodeEntity(string $entity): string
+    public static function decodeEntity($entity)
     {
-        return Html5EntityDecoder::decode($entity);
+        if (substr($entity, -1) !== ';') {
+            return $entity;
+        }
+
+        if (substr($entity, 0, 2) === '&#') {
+            if (strtolower(substr($entity, 2, 1)) === 'x') {
+                return self::fromHex(substr($entity, 3, -1));
+            } else {
+                return self::fromDecimal(substr($entity, 2, -1));
+            }
+        }
+
+        $name = substr($entity, 1, -1);
+        if (isset(self::$entitiesByName[$name])) {
+            return self::$entitiesByName[$name];
+        }
+
+        return $entity;
     }
 
     /**
      * @param mixed $number
      *
      * @return string
-     *
-     * @deprecated This method will be removed in v2.0.0
      */
-    public static function fromDecimal($number): string
+    public static function fromDecimal($number)
     {
         // Only convert code points within planes 0-2, excluding NULL
         if (empty($number) || $number > 0x2FFFF) {
@@ -2280,7 +2283,7 @@ final class Html5Entities
 
         $entity = '&#' . $number . ';';
 
-        $converted = \mb_decode_numericentity($entity, [0x0, 0x2FFFF, 0, 0xFFFF], 'UTF-8');
+        $converted = mb_decode_numericentity($entity, [0x0, 0x2FFFF, 0, 0xFFFF], 'UTF-8');
 
         if ($converted === $entity) {
             return self::fromHex('fffd');
@@ -2293,11 +2296,9 @@ final class Html5Entities
      * @param string $hexChars
      *
      * @return string
-     *
-     * @deprecated This method will be removed in v2.0.0
      */
-    public static function fromHex(string $hexChars): string
+    public static function fromHex($hexChars)
     {
-        return self::fromDecimal(\hexdec($hexChars));
+        return self::fromDecimal(hexdec($hexChars));
     }
 }

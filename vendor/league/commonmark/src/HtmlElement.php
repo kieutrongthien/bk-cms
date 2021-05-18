@@ -1,20 +1,6 @@
 <?php
 
-/*
- * This file is part of the league/commonmark package.
- *
- * (c) Colin O'Dell <colinodell@gmail.com>
- *
- * Original code based on the CommonMark JS reference parser (https://bitly.com/commonmark-js)
- *  - (c) John MacFarlane
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace League\CommonMark;
-
-use League\CommonMark\Util\Xml;
 
 class HtmlElement
 {
@@ -39,21 +25,24 @@ class HtmlElement
     protected $selfClosing = false;
 
     /**
-     * @param string                                $tagName     Name of the HTML tag
-     * @param string[]                              $attributes  Array of attributes (values should be unescaped)
-     * @param HtmlElement|HtmlElement[]|string|null $contents    Inner contents, pre-escaped if needed
-     * @param bool                                  $selfClosing Whether the tag is self-closing
+     * @param string                           $tagName
+     * @param string[]                         $attributes
+     * @param HtmlElement|HtmlElement[]|string $contents
+     * @param bool                             $selfClosing
      */
-    public function __construct(string $tagName, array $attributes = [], $contents = '', bool $selfClosing = false)
+    public function __construct($tagName, $attributes = [], $contents = '', $selfClosing = false)
     {
         $this->tagName = $tagName;
         $this->attributes = $attributes;
         $this->selfClosing = $selfClosing;
 
-        $this->setContents($contents ?? '');
+        $this->setContents($contents);
     }
 
-    public function getTagName(): string
+    /**
+     * @return string
+     */
+    public function getTagName()
     {
         return $this->tagName;
     }
@@ -61,21 +50,32 @@ class HtmlElement
     /**
      * @return string[]
      */
-    public function getAllAttributes(): array
+    public function getAllAttributes()
     {
         return $this->attributes;
     }
 
-    public function getAttribute(string $key): ?string
+    /**
+     * @param string $key
+     *
+     * @return string|null
+     */
+    public function getAttribute($key)
     {
         if (!isset($this->attributes[$key])) {
-            return null;
+            return;
         }
 
         return $this->attributes[$key];
     }
 
-    public function setAttribute(string $key, string $value): self
+    /**
+     * @param string $key
+     * @param string $value
+     *
+     * @return $this
+     */
+    public function setAttribute($key, $value)
     {
         $this->attributes[$key] = $value;
 
@@ -87,41 +87,44 @@ class HtmlElement
      *
      * @return HtmlElement|HtmlElement[]|string
      */
-    public function getContents(bool $asString = true)
+    public function getContents($asString = true)
     {
-        if (!$asString) {
+        if (!$asString || is_string($this->contents)) {
             return $this->contents;
         }
 
-        return $this->getContentsAsString();
+        if (is_array($this->contents)) {
+            return implode('', $this->contents);
+        }
+
+        return (string) $this->contents;
     }
 
     /**
-     * Sets the inner contents of the tag (must be pre-escaped if needed)
-     *
      * @param HtmlElement|HtmlElement[]|string $contents
      *
      * @return $this
      */
-    public function setContents($contents): self
+    public function setContents($contents)
     {
-        $this->contents = $contents ?? '';
+        $this->contents = !is_null($contents) ? $contents : '';
 
         return $this;
     }
 
-    public function __toString(): string
+    /**
+     * @return string
+     */
+    public function __toString()
     {
         $result = '<' . $this->tagName;
 
         foreach ($this->attributes as $key => $value) {
-            $result .= ' ' . $key . '="' . Xml::escape($value) . '"';
+            $result .= ' ' . $key . '="' . $value . '"';
         }
 
         if ($this->contents !== '') {
-            $result .= '>' . $this->getContentsAsString() . '</' . $this->tagName . '>';
-        } elseif ($this->selfClosing && $this->tagName === 'input') {
-            $result .= '>';
+            $result .= '>' . $this->getContents(true) . '</' . $this->tagName . '>';
         } elseif ($this->selfClosing) {
             $result .= ' />';
         } else {
@@ -129,18 +132,5 @@ class HtmlElement
         }
 
         return $result;
-    }
-
-    private function getContentsAsString(): string
-    {
-        if (\is_string($this->contents)) {
-            return $this->contents;
-        }
-
-        if (\is_array($this->contents)) {
-            return \implode('', $this->contents);
-        }
-
-        return (string) $this->contents;
     }
 }

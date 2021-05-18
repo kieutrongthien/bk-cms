@@ -17,19 +17,41 @@ namespace League\CommonMark\Block\Element;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 
-class IndentedCode extends AbstractStringContainerBlock
+class IndentedCode extends AbstractBlock
 {
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return true;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return true;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         if ($cursor->isIndented()) {
             $cursor->advanceBy(Cursor::INDENT_LEVEL, true);
@@ -42,31 +64,33 @@ class IndentedCode extends AbstractStringContainerBlock
         return true;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
-        $reversed = \array_reverse($this->strings->toArray(), true);
+        $reversed = array_reverse($this->getStrings(), true);
         foreach ($reversed as $index => $line) {
-            if ($line === '' || $line === "\n" || \preg_match('/^(\n *)$/', $line)) {
+            if ($line === '' || $line === "\n" || preg_match('/^(\n *)$/', $line)) {
                 unset($reversed[$index]);
             } else {
                 break;
             }
         }
-        $fixed = \array_reverse($reversed);
-        $tmp = \implode("\n", $fixed);
-        if (\substr($tmp, -1) !== "\n") {
+        $fixed = array_reverse($reversed);
+        $tmp = implode("\n", $fixed);
+        if (substr($tmp, -1) !== "\n") {
             $tmp .= "\n";
         }
 
         $this->finalStringContents = $tmp;
     }
 
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
     public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
     {
-        /** @var self $tip */
-        $tip = $context->getTip();
-        $tip->addLine($cursor->getRemainder());
+        $context->getTip()->addLine($cursor->getRemainder());
     }
 }

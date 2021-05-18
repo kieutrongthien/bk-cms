@@ -27,14 +27,14 @@ class MigrateResetCommand extends Command
     protected $description = 'Reset the modules migrations.';
 
     /**
-     * @var \Nwidart\Modules\Contracts\RepositoryInterface
+     * @var \Nwidart\Modules\Repository
      */
     protected $module;
 
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $this->module = $this->laravel['modules'];
 
@@ -43,7 +43,7 @@ class MigrateResetCommand extends Command
         if (!empty($name)) {
             $this->reset($name);
 
-            return 0;
+            return;
         }
 
         foreach ($this->module->getOrdered($this->option('direction')) as $module) {
@@ -51,8 +51,6 @@ class MigrateResetCommand extends Command
 
             $this->reset($module);
         }
-
-        return 0;
     }
 
     /**
@@ -66,7 +64,7 @@ class MigrateResetCommand extends Command
             $module = $this->module->findOrFail($module);
         }
 
-        $migrator = new Migrator($module, $this->getLaravel());
+        $migrator = new Migrator($module);
 
         $database = $this->option('database');
 

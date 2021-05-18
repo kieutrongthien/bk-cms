@@ -17,58 +17,179 @@ namespace League\CommonMark\Util;
 use League\CommonMark\Block\Element\HtmlBlock;
 
 /**
- * Provides regular expressions and utilities for parsing Markdown
+ * Provides regular expressions and utilties for parsing Markdown
+ *
+ * Singletons are generally bad, but it allows us to build the regexes once (and only once).
  */
-final class RegexHelper
+class RegexHelper
 {
-    // Partial regular expressions (wrap with `/` on each side before use)
-    public const PARTIAL_ENTITY = '&(?:#x[a-f0-9]{1,6}|#[0-9]{1,7}|[a-z][a-z0-9]{1,31});';
-    public const PARTIAL_ESCAPABLE = '[!"#$%&\'()*+,.\/:;<=>?@[\\\\\]^_`{|}~-]';
-    public const PARTIAL_ESCAPED_CHAR = '\\\\' . self::PARTIAL_ESCAPABLE;
-    public const PARTIAL_IN_DOUBLE_QUOTES = '"(' . self::PARTIAL_ESCAPED_CHAR . '|[^"\x00])*"';
-    public const PARTIAL_IN_SINGLE_QUOTES = '\'(' . self::PARTIAL_ESCAPED_CHAR . '|[^\'\x00])*\'';
-    public const PARTIAL_IN_PARENS = '\\((' . self::PARTIAL_ESCAPED_CHAR . '|[^)\x00])*\\)';
-    public const PARTIAL_REG_CHAR = '[^\\\\()\x00-\x20]';
-    public const PARTIAL_IN_PARENS_NOSP = '\((' . self::PARTIAL_REG_CHAR . '|' . self::PARTIAL_ESCAPED_CHAR . '|\\\\)*\)';
-    public const PARTIAL_TAGNAME = '[A-Za-z][A-Za-z0-9-]*';
-    public const PARTIAL_BLOCKTAGNAME = '(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|section|source|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)';
-    public const PARTIAL_ATTRIBUTENAME = '[a-zA-Z_:][a-zA-Z0-9:._-]*';
-    public const PARTIAL_UNQUOTEDVALUE = '[^"\'=<>`\x00-\x20]+';
-    public const PARTIAL_SINGLEQUOTEDVALUE = '\'[^\']*\'';
-    public const PARTIAL_DOUBLEQUOTEDVALUE = '"[^"]*"';
-    public const PARTIAL_ATTRIBUTEVALUE = '(?:' . self::PARTIAL_UNQUOTEDVALUE . '|' . self::PARTIAL_SINGLEQUOTEDVALUE . '|' . self::PARTIAL_DOUBLEQUOTEDVALUE . ')';
-    public const PARTIAL_ATTRIBUTEVALUESPEC = '(?:' . '\s*=' . '\s*' . self::PARTIAL_ATTRIBUTEVALUE . ')';
-    public const PARTIAL_ATTRIBUTE = '(?:' . '\s+' . self::PARTIAL_ATTRIBUTENAME . self::PARTIAL_ATTRIBUTEVALUESPEC . '?)';
-    public const PARTIAL_OPENTAG = '<' . self::PARTIAL_TAGNAME . self::PARTIAL_ATTRIBUTE . '*' . '\s*\/?>';
-    public const PARTIAL_CLOSETAG = '<\/' . self::PARTIAL_TAGNAME . '\s*[>]';
-    public const PARTIAL_OPENBLOCKTAG = '<' . self::PARTIAL_BLOCKTAGNAME . self::PARTIAL_ATTRIBUTE . '*' . '\s*\/?>';
-    public const PARTIAL_CLOSEBLOCKTAG = '<\/' . self::PARTIAL_BLOCKTAGNAME . '\s*[>]';
-    public const PARTIAL_HTMLCOMMENT = '<!---->|<!--(?:-?[^>-])(?:-?[^-])*-->';
-    public const PARTIAL_PROCESSINGINSTRUCTION = '[<][?].*?[?][>]';
-    public const PARTIAL_DECLARATION = '<![A-Z]+' . '\s+[^>]*>';
-    public const PARTIAL_CDATA = '<!\[CDATA\[[\s\S]*?]\]>';
-    public const PARTIAL_HTMLTAG = '(?:' . self::PARTIAL_OPENTAG . '|' . self::PARTIAL_CLOSETAG . '|' . self::PARTIAL_HTMLCOMMENT . '|' .
-        self::PARTIAL_PROCESSINGINSTRUCTION . '|' . self::PARTIAL_DECLARATION . '|' . self::PARTIAL_CDATA . ')';
-    public const PARTIAL_HTMLBLOCKOPEN = '<(?:' . self::PARTIAL_BLOCKTAGNAME . '(?:[\s\/>]|$)' . '|' .
-        '\/' . self::PARTIAL_BLOCKTAGNAME . '(?:[\s>]|$)' . '|' . '[?!])';
-    public const PARTIAL_LINK_TITLE = '^(?:"(' . self::PARTIAL_ESCAPED_CHAR . '|[^"\x00])*"' .
-        '|' . '\'(' . self::PARTIAL_ESCAPED_CHAR . '|[^\'\x00])*\'' .
-        '|' . '\((' . self::PARTIAL_ESCAPED_CHAR . '|[^()\x00])*\))';
+    const ESCAPABLE = 0;
+    const ESCAPED_CHAR = 1;
+    const IN_DOUBLE_QUOTES = 2;
+    const IN_SINGLE_QUOTES = 3;
+    const IN_PARENS = 4;
+    const REG_CHAR = 5;
+    const IN_PARENS_NOSP = 6;
+    const TAGNAME = 7;
+    const BLOCKTAGNAME = 8;
+    const ATTRIBUTENAME = 9;
+    const UNQUOTEDVALUE = 10;
+    const SINGLEQUOTEDVALUE = 11;
+    const DOUBLEQUOTEDVALUE = 12;
+    const ATTRIBUTEVALUE = 13;
+    const ATTRIBUTEVALUESPEC = 14;
+    const ATTRIBUTE = 15;
+    const OPENTAG = 16;
+    const CLOSETAG = 17;
+    const OPENBLOCKTAG = 18;
+    const CLOSEBLOCKTAG = 19;
+    const HTMLCOMMENT = 20;
+    const PROCESSINGINSTRUCTION = 21;
+    const DECLARATION = 22;
+    const CDATA = 23;
+    const HTMLTAG = 24;
+    const HTMLBLOCKOPEN = 25;
+    const LINK_TITLE = 26;
 
-    public const REGEX_PUNCTUATION = '/^[\x{2000}-\x{206F}\x{2E00}-\x{2E7F}\p{Pc}\p{Pd}\p{Pe}\p{Pf}\p{Pi}\p{Po}\p{Ps}\\\\\'!"#\$%&\(\)\*\+,\-\.\\/:;<=>\?@\[\]\^_`\{\|\}~]/u';
-    public const REGEX_UNSAFE_PROTOCOL = '/^javascript:|vbscript:|file:|data:/i';
-    public const REGEX_SAFE_DATA_PROTOCOL = '/^data:image\/(?:png|gif|jpeg|webp)/i';
-    public const REGEX_NON_SPACE = '/[^ \t\f\v\r\n]/';
+    const REGEX_ESCAPABLE = '[!"#$%&\'()*+,.\/:;<=>?@[\\\\\]^_`{|}~-]';
+    const REGEX_ENTITY = '&(?:#x[a-f0-9]{1,8}|#[0-9]{1,8}|[a-z][a-z0-9]{1,31});';
+    const REGEX_PUNCTUATION = '/^[\x{2000}-\x{206F}\x{2E00}-\x{2E7F}\p{Pc}\p{Pd}\p{Pe}\p{Pf}\p{Pi}\p{Po}\p{Ps}\\\\\'!"#\$%&\(\)\*\+,\-\.\\/:;<=>\?@\[\]\^_`\{\|\}~]/u';
+    const REGEX_UNSAFE_PROTOCOL = '/^javascript:|vbscript:|file:|data:/i';
+    const REGEX_SAFE_DATA_PROTOCOL = '/^data:image\/(?:png|gif|jpeg|webp)/i';
+    const REGEX_NON_SPACE = '/[^ \t\f\v\r\n]/';
 
-    public const REGEX_WHITESPACE_CHAR = '/^[ \t\n\x0b\x0c\x0d]/';
-    public const REGEX_WHITESPACE = '/[ \t\n\x0b\x0c\x0d]+/';
-    public const REGEX_UNICODE_WHITESPACE_CHAR = '/^\pZ|\s/u';
-    public const REGEX_THEMATIC_BREAK = '/^(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})[ \t]*$/';
-    public const REGEX_LINK_DESTINATION_BRACES = '/^(?:<(?:[^<>\\n\\\\\\x00]|\\\\.)*>)/';
+    const REGEX_WHITESPACE_CHAR = '/^[ \t\n\x0b\x0c\x0d]/';
+    const REGEX_WHITESPACE = '/[ \t\n\x0b\x0c\x0d]+/';
+    const REGEX_UNICODE_WHITESPACE_CHAR = '/^\pZ|\s/u';
 
-    public static function isEscapable(string $character): bool
+    /**
+     * @deprecated
+     */
+    const REGEX_UNICODE_WHITESPACE = '/\pZ|\s/u';
+
+    protected $regex = [];
+
+    protected static $instance;
+
+    /**
+     * Constructor
+     */
+    protected function __construct()
     {
-        return \preg_match('/' . self::PARTIAL_ESCAPABLE . '/', $character) === 1;
+        $this->buildRegexPatterns();
+    }
+
+    /**
+     * @return RegexHelper
+     */
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Builds the regular expressions required to parse Markdown
+     *
+     * We could hard-code them all as pre-built constants, but that would be more difficult to manage.
+     */
+    protected function buildRegexPatterns()
+    {
+        $regex = [];
+        $regex[self::ESCAPABLE] = self::REGEX_ESCAPABLE;
+        $regex[self::ESCAPED_CHAR] = '\\\\' . $regex[self::ESCAPABLE];
+        $regex[self::IN_DOUBLE_QUOTES] = '"(' . $regex[self::ESCAPED_CHAR] . '|[^"\x00])*"';
+        $regex[self::IN_SINGLE_QUOTES] = '\'(' . $regex[self::ESCAPED_CHAR] . '|[^\'\x00])*\'';
+        $regex[self::IN_PARENS] = '\\((' . $regex[self::ESCAPED_CHAR] . '|[^)\x00])*\\)';
+        $regex[self::REG_CHAR] = '[^\\\\()\x00-\x20]';
+        $regex[self::IN_PARENS_NOSP] = '\((' . $regex[self::REG_CHAR] . '|' . $regex[self::ESCAPED_CHAR] . '|\\\\)*\)';
+        $regex[self::TAGNAME] = '[A-Za-z][A-Za-z0-9-]*';
+        $regex[self::BLOCKTAGNAME] = '(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|section|source|title|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)';
+        $regex[self::ATTRIBUTENAME] = '[a-zA-Z_:][a-zA-Z0-9:._-]*';
+        $regex[self::UNQUOTEDVALUE] = '[^"\'=<>`\x00-\x20]+';
+        $regex[self::SINGLEQUOTEDVALUE] = '\'[^\']*\'';
+        $regex[self::DOUBLEQUOTEDVALUE] = '"[^"]*"';
+        $regex[self::ATTRIBUTEVALUE] = '(?:' . $regex[self::UNQUOTEDVALUE] . '|' . $regex[self::SINGLEQUOTEDVALUE] . '|' . $regex[self::DOUBLEQUOTEDVALUE] . ')';
+        $regex[self::ATTRIBUTEVALUESPEC] = '(?:' . '\s*=' . '\s*' . $regex[self::ATTRIBUTEVALUE] . ')';
+        $regex[self::ATTRIBUTE] = '(?:' . '\s+' . $regex[self::ATTRIBUTENAME] . $regex[self::ATTRIBUTEVALUESPEC] . '?)';
+        $regex[self::OPENTAG] = '<' . $regex[self::TAGNAME] . $regex[self::ATTRIBUTE] . '*' . '\s*\/?>';
+        $regex[self::CLOSETAG] = '<\/' . $regex[self::TAGNAME] . '\s*[>]';
+        $regex[self::OPENBLOCKTAG] = '<' . $regex[self::BLOCKTAGNAME] . $regex[self::ATTRIBUTE] . '*' . '\s*\/?>';
+        $regex[self::CLOSEBLOCKTAG] = '<\/' . $regex[self::BLOCKTAGNAME] . '\s*[>]';
+        $regex[self::HTMLCOMMENT] = '<!---->|<!--(?:-?[^>-])(?:-?[^-])*-->';
+        $regex[self::PROCESSINGINSTRUCTION] = '[<][?].*?[?][>]';
+        $regex[self::DECLARATION] = '<![A-Z]+' . '\s+[^>]*>';
+        $regex[self::CDATA] = '<!\[CDATA\[[\s\S]*?]\]>';
+        $regex[self::HTMLTAG] = '(?:' . $regex[self::OPENTAG] . '|' . $regex[self::CLOSETAG] . '|' . $regex[self::HTMLCOMMENT] . '|' .
+            $regex[self::PROCESSINGINSTRUCTION] . '|' . $regex[self::DECLARATION] . '|' . $regex[self::CDATA] . ')';
+        $regex[self::HTMLBLOCKOPEN] = '<(?:' . $regex[self::BLOCKTAGNAME] . '(?:[\s\/>]|$)' . '|' .
+            '\/' . $regex[self::BLOCKTAGNAME] . '(?:[\s>]|$)' . '|' . '[?!])';
+        $regex[self::LINK_TITLE] = '^(?:"(' . $regex[self::ESCAPED_CHAR] . '|[^"\x00])*"' .
+            '|' . '\'(' . $regex[self::ESCAPED_CHAR] . '|[^\'\x00])*\'' .
+            '|' . '\((' . $regex[self::ESCAPED_CHAR] . '|[^)\x00])*\))';
+
+        $this->regex = $regex;
+    }
+
+    /**
+     * Returns a partial regex
+     *
+     * It'll need to be wrapped with /.../ before use
+     *
+     * @param int $const
+     *
+     * @return string
+     */
+    public function getPartialRegex($const)
+    {
+        return $this->regex[$const];
+    }
+
+    /**
+     * @return string
+     */
+    public function getHtmlTagRegex()
+    {
+        return '/^' . $this->regex[self::HTMLTAG] . '/i';
+    }
+
+    /**
+     * @return string
+     */
+    public function getLinkTitleRegex()
+    {
+        return '/' . $this->regex[self::LINK_TITLE] . '/';
+    }
+
+    /**
+     * @return string
+     *
+     * @deprecated
+     */
+    public function getLinkDestinationRegex()
+    {
+        @trigger_error('RegexHelper::getLinkDestinationRegex() is no longer used and will be removed in a future 0.x release.', E_USER_DEPRECATED);
+
+        return '/^' . '(?:' . $this->regex[self::REG_CHAR] . '+|' . $this->regex[self::ESCAPED_CHAR] . '|\\\\|' . $this->regex[self::IN_PARENS_NOSP] . ')*' . '/';
+    }
+
+    /**
+     * @return string
+     */
+    public function getLinkDestinationBracesRegex()
+    {
+        return '/^(?:' . '[<](?:[^ <>\\t\\n\\\\\\x00]' . '|' . $this->regex[self::ESCAPED_CHAR] . '|' . '\\\\)*[>]' . ')/';
+    }
+
+    /**
+     * @return string
+     */
+    public function getThematicBreakRegex()
+    {
+        return '/^(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})[ \t]*$/';
     }
 
     /**
@@ -80,16 +201,16 @@ final class RegexHelper
      *
      * @return int|null Index of match, or null
      */
-    public static function matchAt(string $regex, string $string, int $offset = 0): ?int
+    public static function matchAt($regex, $string, $offset = 0)
     {
         $matches = [];
-        $string = \mb_substr($string, $offset, null, 'utf-8');
-        if (!\preg_match($regex, $string, $matches, \PREG_OFFSET_CAPTURE)) {
-            return null;
+        $string = mb_substr($string, $offset, null, 'utf-8');
+        if (!preg_match($regex, $string, $matches, PREG_OFFSET_CAPTURE)) {
+            return;
         }
 
         // PREG_OFFSET_CAPTURE always returns the byte offset, not the char offset, which is annoying
-        $charPos = \mb_strlen(\mb_strcut($string, 0, $matches[0][1], 'utf-8'), 'utf-8');
+        $charPos = mb_strlen(mb_strcut($string, 0, $matches[0][1], 'utf-8'), 'utf-8');
 
         return $offset + $charPos;
     }
@@ -101,28 +222,28 @@ final class RegexHelper
      * @param string $subject
      * @param int    $offset
      *
-     * @return array<string>|null
+     * @return array|null
      */
-    public static function matchAll(string $pattern, string $subject, int $offset = 0): ?array
+    public static function matchAll($pattern, $subject, $offset = 0)
     {
-        if ($offset !== 0) {
-            $subject = \substr($subject, $offset);
-        }
+        $matches = [];
+        $subject = substr($subject, $offset);
+        preg_match_all($pattern, $subject, $matches, PREG_PATTERN_ORDER);
 
-        \preg_match_all($pattern, $subject, $matches, \PREG_PATTERN_ORDER);
-
-        $fullMatches = \reset($matches);
+        $fullMatches = reset($matches);
         if (empty($fullMatches)) {
-            return null;
+            return;
         }
 
-        if (\count($fullMatches) === 1) {
+        if (count($fullMatches) === 1) {
             foreach ($matches as &$match) {
-                $match = \reset($match);
+                $match = reset($match);
             }
         }
 
-        return $matches ?: null;
+        if (!empty($matches)) {
+            return $matches;
+        }
     }
 
     /**
@@ -132,16 +253,13 @@ final class RegexHelper
      *
      * @return string
      */
-    public static function unescape(string $string): string
+    public static function unescape($string)
     {
-        $allEscapedChar = '/\\\\(' . self::PARTIAL_ESCAPABLE . ')/';
+        $allEscapedChar = '/\\\\(' . self::REGEX_ESCAPABLE . ')/';
 
-        /** @var string $escaped */
-        $escaped = \preg_replace($allEscapedChar, '$1', $string);
-
-        /** @var string $replaced */
-        $replaced = \preg_replace_callback('/' . self::PARTIAL_ENTITY . '/i', function ($e) {
-            return Html5EntityDecoder::decode($e[0]);
+        $escaped = preg_replace($allEscapedChar, '$1', $string);
+        $replaced = preg_replace_callback('/' . self::REGEX_ENTITY . '/i', function ($e) {
+            return Html5Entities::decodeEntity($e[0]);
         }, $escaped);
 
         return $replaced;
@@ -150,15 +268,13 @@ final class RegexHelper
     /**
      * @param int $type HTML block type
      *
-     * @return string
-     *
-     * @internal
+     * @return string|null
      */
-    public static function getHtmlBlockOpenRegex(int $type): string
+    public static function getHtmlBlockOpenRegex($type)
     {
         switch ($type) {
             case HtmlBlock::TYPE_1_CODE_CONTAINER:
-                return '/^<(?:script|pre|textarea|style)(?:\s|>|$)/i';
+                return '/^<(?:script|pre|style)(?:\s|>|$)/i';
             case HtmlBlock::TYPE_2_COMMENT:
                 return '/^<!--/';
             case HtmlBlock::TYPE_3:
@@ -168,26 +284,24 @@ final class RegexHelper
             case HtmlBlock::TYPE_5_CDATA:
                 return '/^<!\[CDATA\[/';
             case HtmlBlock::TYPE_6_BLOCK_ELEMENT:
-                return '%^<[/]?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[123456]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|section|source|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:\s|[/]?[>]|$)%i';
+                return '%^<[/]?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[123456]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|section|source|title|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:\s|[/]?[>]|$)%i';
             case HtmlBlock::TYPE_7_MISC_ELEMENT:
-                return '/^(?:' . self::PARTIAL_OPENTAG . '|' . self::PARTIAL_CLOSETAG . ')\\s*$/i';
-        }
+                $self = self::getInstance();
 
-        throw new \InvalidArgumentException('Invalid HTML block type');
+                return '/^(?:' . $self->getPartialRegex(self::OPENTAG) . '|' . $self->getPartialRegex(self::CLOSETAG) . ')\\s*$/i';
+        }
     }
 
     /**
      * @param int $type HTML block type
      *
-     * @return string
-     *
-     * @internal
+     * @return string|null
      */
-    public static function getHtmlBlockCloseRegex(int $type): string
+    public static function getHtmlBlockCloseRegex($type)
     {
         switch ($type) {
             case HtmlBlock::TYPE_1_CODE_CONTAINER:
-                return '%<\/(?:script|pre|textarea|style)>%i';
+                return '%<\/(?:script|pre|style)>%i';
             case HtmlBlock::TYPE_2_COMMENT:
                 return '/-->/';
             case HtmlBlock::TYPE_3:
@@ -197,12 +311,15 @@ final class RegexHelper
             case HtmlBlock::TYPE_5_CDATA:
                 return '/\]\]>/';
         }
-
-        throw new \InvalidArgumentException('Invalid HTML block type');
     }
 
-    public static function isLinkPotentiallyUnsafe(string $url): bool
+    /**
+     * @param string $url
+     *
+     * @return bool
+     */
+    public static function isLinkPotentiallyUnsafe($url)
     {
-        return \preg_match(self::REGEX_UNSAFE_PROTOCOL, $url) !== 0 && \preg_match(self::REGEX_SAFE_DATA_PROTOCOL, $url) === 0;
+        return preg_match(self::REGEX_UNSAFE_PROTOCOL, $url) !== 0 && preg_match(self::REGEX_SAFE_DATA_PROTOCOL, $url) === 0;
     }
 }

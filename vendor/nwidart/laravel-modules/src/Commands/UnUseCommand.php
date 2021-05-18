@@ -23,12 +23,10 @@ class UnUseCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $this->laravel['modules']->forgetUsed();
 
         $this->info('Previous module used successfully forgotten.');
-
-        return 0;
     }
 }

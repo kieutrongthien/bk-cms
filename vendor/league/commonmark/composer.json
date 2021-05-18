@@ -1,9 +1,9 @@
 {
     "name": "league/commonmark",
     "type": "library",
-    "description": "Highly-extensible PHP Markdown parser which fully supports the CommonMark spec and Github-Flavored Markdown (GFM)",
-    "keywords": ["markdown","parser","commonmark","gfm","github","flavored","github-flavored","md"],
-    "homepage": "https://commonmark.thephpleague.com",
+    "description": "Markdown parser for PHP based on the CommonMark spec",
+    "keywords": ["markdown","parser","commonmark"],
+    "homepage": "https://github.com/thephpleague/commonmark",
     "license": "BSD-3-Clause",
     "authors": [
         {
@@ -13,53 +13,34 @@
             "role": "Lead Developer"
         }
     ],
-    "support": {
-        "docs": "https://commonmark.thephpleague.com/",
-        "issues": "https://github.com/thephpleague/commonmark/issues",
-        "rss": "https://github.com/thephpleague/commonmark/releases.atom",
-        "source": "https://github.com/thephpleague/commonmark"
+    "replace": {
+        "colinodell/commonmark-php": "*"
     },
     "require": {
-        "php": "^7.1 || ^8.0",
+        "php": ">=5.4.8",
         "ext-mbstring": "*"
     },
     "require-dev": {
-        "ext-json": "*",
         "cebe/markdown": "~1.0",
-        "commonmark/commonmark.js": "0.29.2",
         "erusev/parsedown": "~1.0",
-        "github/gfm": "0.29.0",
+        "jgm/CommonMark": "0.28",
         "michelf/php-markdown": "~1.4",
-        "mikehaertl/php-shellcommand": "^1.4",
-        "phpstan/phpstan": "^0.12",
-        "phpunit/phpunit": "^7.5 || ^8.5 || ^9.2",
-        "scrutinizer/ocular": "^1.5",
-        "symfony/finder": "^4.2"
+        "mikehaertl/php-shellcommand": "~1.2.0",
+        "phpunit/phpunit": "~4.3|~5.0",
+        "symfony/finder": "~2.3|~3.0",
+        "scrutinizer/ocular": "~1.1"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "conflict": {
-        "scrutinizer/ocular": "1.7.*"
+    "suggest": {
+        "league/commonmark-extras": "Library of useful extensions including smart punctuation"
     },
     "repositories": [
         {
             "type": "package",
             "package": {
-                "name": "commonmark/commonmark.js",
-                "version": "0.29.2",
+                "name": "jgm/CommonMark",
+                "version": "0.28",
                 "dist": {
-                    "url": "https://github.com/commonmark/commonmark.js/archive/0.29.2.zip",
-                    "type": "zip"
-                }
-            }
-        },
-        {
-            "type": "package",
-            "package": {
-                "name": "github/gfm",
-                "version": "0.29.0",
-                "dist": {
-                    "url": "https://github.com/github/cmark-gfm/archive/0.29.0.gfm.0.zip",
+                    "url": "https://github.com/jgm/commonmark.js/archive/0.28.0.zip",
                     "type": "zip"
                 }
             }
@@ -67,7 +48,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "League\\CommonMark\\": "src"
+            "League\\CommonMark\\": "src/"
         }
     },
     "autoload-dev": {
@@ -77,15 +58,9 @@
         }
     },
     "bin": ["bin/commonmark"],
-    "scripts": {
-        "phpstan": "phpstan analyse",
-        "phpunit": "phpunit --no-coverage",
-        "test": [
-            "@phpstan",
-            "@phpunit"
-        ]
-    },
-    "config": {
-        "sort-packages": true
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.16-dev"
+        }
     }
 }

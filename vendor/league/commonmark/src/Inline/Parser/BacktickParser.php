@@ -17,39 +17,39 @@ namespace League\CommonMark\Inline\Parser;
 use League\CommonMark\Inline\Element\Code;
 use League\CommonMark\Inline\Element\Text;
 use League\CommonMark\InlineParserContext;
+use League\CommonMark\Util\RegexHelper;
 
-final class BacktickParser implements InlineParserInterface
+class BacktickParser extends AbstractInlineParser
 {
-    public function getCharacters(): array
+    /**
+     * @return string[]
+     */
+    public function getCharacters()
     {
         return ['`'];
     }
 
-    public function parse(InlineParserContext $inlineContext): bool
+    /**
+     * @param InlineParserContext $inlineContext
+     *
+     * @return bool
+     */
+    public function parse(InlineParserContext $inlineContext)
     {
         $cursor = $inlineContext->getCursor();
 
         $ticks = $cursor->match('/^`+/');
+        if ($ticks === '') {
+            return false;
+        }
 
-        $currentPosition = $cursor->getPosition();
         $previousState = $cursor->saveState();
 
         while ($matchingTicks = $cursor->match('/`+/m')) {
             if ($matchingTicks === $ticks) {
-                $code = $cursor->getSubstring($currentPosition, $cursor->getPosition() - $currentPosition - \strlen($ticks));
-
-                $c = \preg_replace('/\n/m', ' ', $code);
-
-                if (
-                    !empty($c) &&
-                    $c[0] === ' ' &&
-                    \substr($c, -1, 1) === ' ' &&
-                    \preg_match('/[^ ]/', $c)
-                ) {
-                    $c = \substr($c, 1, -1);
-                }
-
-                $inlineContext->getContainer()->appendChild(new Code($c));
+                $code = mb_substr($cursor->getLine(), $previousState->getCurrentPosition(), $cursor->getPosition() - $previousState->getCurrentPosition() - strlen($ticks), 'utf-8');
+                $c = preg_replace(RegexHelper::REGEX_WHITESPACE, ' ', $code);
+                $inlineContext->getContainer()->appendChild(new Code(trim($c)));
 
                 return true;
             }

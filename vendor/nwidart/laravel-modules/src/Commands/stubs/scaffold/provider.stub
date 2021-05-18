@@ -8,14 +8,11 @@ use Illuminate\Database\Eloquent\Factory;
 class $CLASS$ extends ServiceProvider
 {
     /**
-     * @var string $moduleName
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
      */
-    protected $moduleName = '$MODULE$';
-
-    /**
-     * @var string $moduleNameLower
-     */
-    protected $moduleNameLower = '$LOWER_NAME$';
+    protected $defer = false;
 
     /**
      * Boot the application events.
@@ -27,7 +24,8 @@ class $CLASS$ extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
-        $this->loadMigrationsFrom(module_path($this->moduleName, '$MIGRATIONS_PATH$'));
+        $this->registerFactories();
+        $this->loadMigrationsFrom(__DIR__ . '/../$MIGRATIONS_PATH$');
     }
 
     /**
@@ -37,7 +35,7 @@ class $CLASS$ extends ServiceProvider
      */
     public function register()
     {
-        $this->app->register(RouteServiceProvider::class);
+        //
     }
 
     /**
@@ -48,10 +46,10 @@ class $CLASS$ extends ServiceProvider
     protected function registerConfig()
     {
         $this->publishes([
-            module_path($this->moduleName, '$PATH_CONFIG$/config.php') => config_path($this->moduleNameLower . '.php'),
+            __DIR__.'/../$PATH_CONFIG$/config.php' => config_path('$LOWER_NAME$.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            module_path($this->moduleName, '$PATH_CONFIG$/config.php'), $this->moduleNameLower
+            __DIR__.'/../$PATH_CONFIG$/config.php', '$LOWER_NAME$'
         );
     }
 
@@ -62,15 +60,17 @@ class $CLASS$ extends ServiceProvider
      */
     public function registerViews()
     {
-        $viewPath = resource_path('views/modules/' . $this->moduleNameLower);
+        $viewPath = resource_path('views/modules/$LOWER_NAME$');
 
-        $sourcePath = module_path($this->moduleName, '$PATH_VIEWS$');
+        $sourcePath = __DIR__.'/../$PATH_VIEWS$';
 
         $this->publishes([
             $sourcePath => $viewPath
-        ], ['views', $this->moduleNameLower . '-module-views']);
+        ],'views');
 
-        $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->moduleNameLower);
+        $this->loadViewsFrom(array_merge(array_map(function ($path) {
+            return $path . '/modules/$LOWER_NAME$';
+        }, \Config::get('view.paths')), [$sourcePath]), '$LOWER_NAME$');
     }
 
     /**
@@ -80,12 +80,23 @@ class $CLASS$ extends ServiceProvider
      */
     public function registerTranslations()
     {
-        $langPath = resource_path('lang/modules/' . $this->moduleNameLower);
+        $langPath = resource_path('lang/modules/$LOWER_NAME$');
 
         if (is_dir($langPath)) {
-            $this->loadTranslationsFrom($langPath, $this->moduleNameLower);
+            $this->loadTranslationsFrom($langPath, '$LOWER_NAME$');
         } else {
-            $this->loadTranslationsFrom(module_path($this->moduleName, '$PATH_LANG$'), $this->moduleNameLower);
+            $this->loadTranslationsFrom(__DIR__ .'/../$PATH_LANG$', '$LOWER_NAME$');
+        }
+    }
+
+    /**
+     * Register an additional directory of factories.
+     * @source https://github.com/sebastiaanluca/laravel-resource-flow/blob/develop/src/Modules/ModuleServiceProvider.php#L66
+     */
+    public function registerFactories()
+    {
+        if (! app()->environment('production')) {
+            app(Factory::class)->load(__DIR__ . '/../$FACTORIES_PATH$');
         }
     }
 
@@ -97,16 +108,5 @@ class $CLASS$ extends ServiceProvider
     public function provides()
     {
         return [];
-    }
-
-    private function getPublishableViewPaths(): array
-    {
-        $paths = [];
-        foreach (\Config::get('view.paths') as $path) {
-            if (is_dir($path . '/modules/' . $this->moduleNameLower)) {
-                $paths[] = $path . '/modules/' . $this->moduleNameLower;
-            }
-        }
-        return $paths;
     }
 }

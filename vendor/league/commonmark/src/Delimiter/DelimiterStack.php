@@ -8,31 +8,25 @@
  * Original code based on the CommonMark JS reference parser (https://bitly.com/commonmark-js)
  *  - (c) John MacFarlane
  *
- * Additional emphasis processing code based on commonmark-java (https://github.com/atlassian/commonmark-java)
- *  - (c) Atlassian Pty Ltd
- *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
 namespace League\CommonMark\Delimiter;
 
-use League\CommonMark\Delimiter\Processor\DelimiterProcessorCollection;
-use League\CommonMark\Inline\AdjacentTextMerger;
-
-final class DelimiterStack
+class DelimiterStack
 {
     /**
-     * @var DelimiterInterface|null
+     * @var Delimiter|null
      */
-    private $top;
+    protected $top;
 
-    /**
-     * @param DelimiterInterface $newDelimiter
-     *
-     * @return void
-     */
-    public function push(DelimiterInterface $newDelimiter)
+    public function getTop()
+    {
+        return $this->top;
+    }
+
+    public function push(Delimiter $newDelimiter)
     {
         $newDelimiter->setPrevious($this->top);
 
@@ -43,7 +37,12 @@ final class DelimiterStack
         $this->top = $newDelimiter;
     }
 
-    private function findEarliest(DelimiterInterface $stackBottom = null): ?DelimiterInterface
+    /**
+     * @param Delimiter|null $stackBottom
+     *
+     * @return Delimiter|null
+     */
+    public function findEarliest(Delimiter $stackBottom = null)
     {
         $delimiter = $this->top;
         while ($delimiter !== null && $delimiter->getPrevious() !== $stackBottom) {
@@ -54,11 +53,9 @@ final class DelimiterStack
     }
 
     /**
-     * @param DelimiterInterface $delimiter
-     *
-     * @return void
+     * @param Delimiter $delimiter
      */
-    public function removeDelimiter(DelimiterInterface $delimiter)
+    public function removeDelimiter(Delimiter $delimiter)
     {
         if ($delimiter->getPrevious() !== null) {
             $delimiter->getPrevious()->setNext($delimiter->getNext());
@@ -72,28 +69,10 @@ final class DelimiterStack
         }
     }
 
-    private function removeDelimiterAndNode(DelimiterInterface $delimiter): void
-    {
-        $delimiter->getInlineNode()->detach();
-        $this->removeDelimiter($delimiter);
-    }
-
-    private function removeDelimitersBetween(DelimiterInterface $opener, DelimiterInterface $closer): void
-    {
-        $delimiter = $closer->getPrevious();
-        while ($delimiter !== null && $delimiter !== $opener) {
-            $previous = $delimiter->getPrevious();
-            $this->removeDelimiter($delimiter);
-            $delimiter = $previous;
-        }
-    }
-
     /**
-     * @param DelimiterInterface|null $stackBottom
-     *
-     * @return void
+     * @param Delimiter|null $stackBottom
      */
-    public function removeAll(DelimiterInterface $stackBottom = null)
+    public function removeAll(Delimiter $stackBottom = null)
     {
         while ($this->top && $this->top !== $stackBottom) {
             $this->removeDelimiter($this->top);
@@ -102,10 +81,8 @@ final class DelimiterStack
 
     /**
      * @param string $character
-     *
-     * @return void
      */
-    public function removeEarlierMatches(string $character)
+    public function removeEarlierMatches($character)
     {
         $opener = $this->top;
         while ($opener !== null) {
@@ -120,17 +97,17 @@ final class DelimiterStack
     /**
      * @param string|string[] $characters
      *
-     * @return DelimiterInterface|null
+     * @return Delimiter|null
      */
-    public function searchByCharacter($characters): ?DelimiterInterface
+    public function searchByCharacter($characters)
     {
-        if (!\is_array($characters)) {
+        if (!is_array($characters)) {
             $characters = [$characters];
         }
 
         $opener = $this->top;
         while ($opener !== null) {
-            if (\in_array($opener->getChar(), $characters)) {
+            if (in_array($opener->getChar(), $characters)) {
                 break;
             }
             $opener = $opener->getPrevious();
@@ -140,95 +117,93 @@ final class DelimiterStack
     }
 
     /**
-     * @param DelimiterInterface|null      $stackBottom
-     * @param DelimiterProcessorCollection $processors
-     *
-     * @return void
+     * @param string|string[] $characters
+     * @param callable        $callback
+     * @param Delimiter       $stackBottom
      */
-    public function processDelimiters(?DelimiterInterface $stackBottom, DelimiterProcessorCollection $processors)
+    public function iterateByCharacters($characters, $callback, Delimiter $stackBottom = null)
     {
-        $openersBottom = [];
+        if (!is_array($characters)) {
+            $characters = [$characters];
+        }
+
+        $openersBottom = array_fill_keys($characters, $stackBottom);
 
         // Find first closer above stackBottom
         $closer = $this->findEarliest($stackBottom);
 
-        // Move forward, looking for closers, and handling each
         while ($closer !== null) {
-            $delimiterChar = $closer->getChar();
+            $closerChar = $closer->getChar();
 
-            $delimiterProcessor = $processors->getDelimiterProcessor($delimiterChar);
-            if (!$closer->canClose() || $delimiterProcessor === null) {
+            if (!$closer->canClose() || !in_array($closerChar, $characters)) {
                 $closer = $closer->getNext();
                 continue;
             }
 
-            $openingDelimiterChar = $delimiterProcessor->getOpeningCharacter();
-
-            $useDelims = 0;
-            $openerFound = false;
-            $potentialOpenerFound = false;
-            $opener = $closer->getPrevious();
-            while ($opener !== null && $opener !== $stackBottom && $opener !== ($openersBottom[$delimiterChar] ?? null)) {
-                if ($opener->canOpen() && $opener->getChar() === $openingDelimiterChar) {
-                    $potentialOpenerFound = true;
-                    $useDelims = $delimiterProcessor->getDelimiterUse($opener, $closer);
-                    if ($useDelims > 0) {
-                        $openerFound = true;
-                        break;
-                    }
-                }
-                $opener = $opener->getPrevious();
-            }
-
-            if (!$openerFound) {
-                if (!$potentialOpenerFound) {
-                    // Only do this when we didn't even have a potential
-                    // opener (one that matches the character and can open).
-                    // If an opener was rejected because of the number of
-                    // delimiters (e.g. because of the "multiple of 3"
-                    // Set lower bound for future searches for openersrule),
-                    // we want to consider it next time because the number
-                    // of delimiters can change as we continue processing.
-                    $openersBottom[$delimiterChar] = $closer->getPrevious();
-                    if (!$closer->canOpen()) {
-                        // We can remove a closer that can't be an opener,
-                        // once we've seen there's no matching opener.
-                        $this->removeDelimiter($closer);
-                    }
-                }
+            $oddMatch = false;
+            $opener = $this->findMatchingOpener($closer, $openersBottom, $stackBottom, $oddMatch);
+            if ($opener) {
+                $closer = $callback($opener, $closer, $this);
+            } elseif ($oddMatch) {
                 $closer = $closer->getNext();
+            } else {
+                $oldCloser = $closer;
+                $closer = $closer->getNext();
+                // Set lower bound for future searches for openers:
+                $openersBottom[$closerChar] = $oldCloser->getPrevious();
+                if (!$oldCloser->canOpen()) {
+                    // We can remove a closer that can't be an opener,
+                    // once we've seen there's no matching opener:
+                    $this->removeDelimiter($oldCloser);
+                }
                 continue;
-            }
-
-            $openerNode = $opener->getInlineNode();
-            $closerNode = $closer->getInlineNode();
-
-            // Remove number of used delimiters from stack and inline nodes.
-            $opener->setLength($opener->getLength() - $useDelims);
-            $closer->setLength($closer->getLength() - $useDelims);
-
-            $openerNode->setContent(\substr($openerNode->getContent(), 0, -$useDelims));
-            $closerNode->setContent(\substr($closerNode->getContent(), 0, -$useDelims));
-
-            $this->removeDelimitersBetween($opener, $closer);
-            // The delimiter processor can re-parent the nodes between opener and closer,
-            // so make sure they're contiguous already. Exclusive because we want to keep opener/closer themselves.
-            AdjacentTextMerger::mergeTextNodesBetweenExclusive($openerNode, $closerNode);
-            $delimiterProcessor->process($openerNode, $closerNode, $useDelims);
-
-            // No delimiter characters left to process, so we can remove delimiter and the now empty node.
-            if ($opener->getLength() === 0) {
-                $this->removeDelimiterAndNode($opener);
-            }
-
-            if ($closer->getLength() === 0) {
-                $next = $closer->getNext();
-                $this->removeDelimiterAndNode($closer);
-                $closer = $next;
             }
         }
+    }
 
-        // Remove all delimiters
-        $this->removeAll($stackBottom);
+    /**
+     * @param Delimiter      $closer
+     * @param array          $openersBottom
+     * @param Delimiter|null $stackBottom
+     * @param bool           $oddMatch
+     *
+     * @return Delimiter|null
+     */
+    protected function findMatchingOpener(Delimiter $closer, $openersBottom, Delimiter $stackBottom = null, &$oddMatch = false)
+    {
+        $closerChar = $closer->getChar();
+        $opener = $closer->getPrevious();
+
+        while ($opener !== null && $opener !== $stackBottom && $opener !== $openersBottom[$closerChar]) {
+            $oddMatch = ($closer->canOpen() || $opener->canClose()) && ($opener->getOrigDelims() + $closer->getOrigDelims()) % 3 === 0;
+            if ($opener->getChar() === $closerChar && $opener->canOpen() && !$oddMatch) {
+                return $opener;
+            }
+
+            $opener = $opener->getPrevious();
+        }
+    }
+
+    /**
+     * @param Delimiter      $closer
+     * @param array          $openersBottom
+     * @param Delimiter|null $stackBottom
+     *
+     * @return Delimiter|null
+     *
+     * @deprecated Use findMatchingOpener() instead.  This method will be removed in the next major release.
+     */
+    protected function findFirstMatchingOpener(Delimiter $closer, $openersBottom, Delimiter $stackBottom = null)
+    {
+        $closerChar = $closer->getChar();
+        $opener = $closer->getPrevious();
+
+        while ($opener !== null && $opener !== $stackBottom && $opener !== $openersBottom[$closerChar]) {
+            if ($opener->getChar() === $closerChar && $opener->canOpen()) {
+                return $opener;
+            }
+
+            $opener = $opener->getPrevious();
+        }
     }
 }

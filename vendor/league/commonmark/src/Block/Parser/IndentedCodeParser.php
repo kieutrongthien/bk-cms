@@ -19,9 +19,15 @@ use League\CommonMark\Block\Element\Paragraph;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 
-final class IndentedCodeParser implements BlockParserInterface
+class IndentedCodeParser extends AbstractBlockParser
 {
-    public function parse(ContextInterface $context, Cursor $cursor): bool
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     *
+     * @return bool
+     */
+    public function parse(ContextInterface $context, Cursor $cursor)
     {
         if (!$cursor->isIndented()) {
             return false;

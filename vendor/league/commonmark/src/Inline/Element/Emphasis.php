@@ -14,10 +14,6 @@
 
 namespace League\CommonMark\Inline\Element;
 
-class Emphasis extends AbstractInline
+class Emphasis extends AbstractInlineContainer
 {
-    public function isContainer(): bool
-    {
-        return true;
-    }
 }

@@ -32,7 +32,7 @@ abstract class GeneratorCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $path = str_replace('\\', '/', $this->getDestinationFilePath());
 
@@ -43,17 +43,12 @@ abstract class GeneratorCommand extends Command
         $contents = $this->getTemplateContents();
 
         try {
-            $overwriteFile = $this->hasOption('force') ? $this->option('force') : false;
-            (new FileGenerator($path, $contents))->withFileOverwrite($overwriteFile)->generate();
+            with(new FileGenerator($path, $contents))->generate();
 
             $this->info("Created : {$path}");
         } catch (FileAlreadyExistException $e) {
             $this->error("File : {$path} already exists.");
-
-            return E_ERROR;
         }
-
-        return 0;
     }
 
     /**

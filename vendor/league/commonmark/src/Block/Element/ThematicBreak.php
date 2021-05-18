@@ -18,17 +18,39 @@ use League\CommonMark\Cursor;
 
 class ThematicBreak extends AbstractBlock
 {
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return false;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return false;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         return false;
     }

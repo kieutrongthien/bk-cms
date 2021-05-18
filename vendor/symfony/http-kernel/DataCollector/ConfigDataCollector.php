@@ -15,12 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\VarDumper\Caster\ClassStub;
+use Symfony\Component\VarDumper\Caster\LinkStub;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @final
  */
 class ConfigDataCollector extends DataCollector implements LateDataCollectorInterface
 {
@@ -28,6 +26,20 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
      * @var KernelInterface
      */
     private $kernel;
+    private $name;
+    private $version;
+    private $hasVarDumper;
+
+    /**
+     * @param string $name    The name of the application using the web profiler
+     * @param string $version The version of the application using the web profiler
+     */
+    public function __construct($name = null, $version = null)
+    {
+        $this->name = $name;
+        $this->version = $version;
+        $this->hasVarDumper = class_exists(LinkStub::class);
+    }
 
     /**
      * Sets the Kernel associated with this Request.
@@ -40,24 +52,20 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
     /**
      * {@inheritdoc}
      */
-    public function collect(Request $request, Response $response, \Throwable $exception = null)
+    public function collect(Request $request, Response $response, \Exception $exception = null)
     {
-        $eom = \DateTime::createFromFormat('d/m/Y', '01/'.Kernel::END_OF_MAINTENANCE);
-        $eol = \DateTime::createFromFormat('d/m/Y', '01/'.Kernel::END_OF_LIFE);
-
         $this->data = [
+            'app_name' => $this->name,
+            'app_version' => $this->version,
             'token' => $response->headers->get('X-Debug-Token'),
             'symfony_version' => Kernel::VERSION,
-            'symfony_minor_version' => sprintf('%s.%s', Kernel::MAJOR_VERSION, Kernel::MINOR_VERSION),
-            'symfony_lts' => 4 === Kernel::MINOR_VERSION,
-            'symfony_state' => $this->determineSymfonyState(),
-            'symfony_eom' => $eom->format('F Y'),
-            'symfony_eol' => $eol->format('F Y'),
+            'symfony_state' => 'unknown',
+            'name' => isset($this->kernel) ? $this->kernel->getName() : 'n/a',
             'env' => isset($this->kernel) ? $this->kernel->getEnvironment() : 'n/a',
             'debug' => isset($this->kernel) ? $this->kernel->isDebug() : 'n/a',
             'php_version' => \PHP_VERSION,
             'php_architecture' => \PHP_INT_SIZE * 8,
-            'php_intl_locale' => class_exists(\Locale::class, false) && \Locale::getDefault() ? \Locale::getDefault() : 'n/a',
+            'php_intl_locale' => class_exists('Locale', false) && \Locale::getDefault() ? \Locale::getDefault() : 'n/a',
             'php_timezone' => date_default_timezone_get(),
             'xdebug_enabled' => \extension_loaded('xdebug'),
             'apcu_enabled' => \extension_loaded('apcu') && filter_var(ini_get('apc.enabled'), \FILTER_VALIDATE_BOOLEAN),
@@ -68,8 +76,15 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
 
         if (isset($this->kernel)) {
             foreach ($this->kernel->getBundles() as $name => $bundle) {
-                $this->data['bundles'][$name] = new ClassStub(\get_class($bundle));
+                $this->data['bundles'][$name] = $this->hasVarDumper ? new LinkStub($bundle->getPath()) : $bundle->getPath();
             }
+
+            $this->data['symfony_state'] = $this->determineSymfonyState();
+            $this->data['symfony_minor_version'] = sprintf('%s.%s', Kernel::MAJOR_VERSION, Kernel::MINOR_VERSION);
+            $eom = \DateTime::createFromFormat('d/m/Y', '01/'.Kernel::END_OF_MAINTENANCE);
+            $eol = \DateTime::createFromFormat('d/m/Y', '01/'.Kernel::END_OF_LIFE);
+            $this->data['symfony_eom'] = $eom->format('F Y');
+            $this->data['symfony_eol'] = $eol->format('F Y');
         }
 
         if (preg_match('~^(\d+(?:\.\d+)*)(.+)?$~', $this->data['php_version'], $matches) && isset($matches[2])) {
@@ -89,6 +104,16 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
     public function lateCollect()
     {
         $this->data = $this->cloneVar($this->data);
+    }
+
+    public function getApplicationName()
+    {
+        return $this->data['app_name'];
+    }
+
+    public function getApplicationVersion()
+    {
+        return $this->data['app_version'];
     }
 
     /**
@@ -133,14 +158,6 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
     }
 
     /**
-     * Returns if the current Symfony version is a Long-Term Support one.
-     */
-    public function isSymfonyLts(): bool
-    {
-        return $this->data['symfony_lts'];
-    }
-
-    /**
      * Returns the human redable date when this Symfony version ends its
      * maintenance period.
      *
@@ -179,7 +196,7 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
      */
     public function getPhpVersionExtra()
     {
-        return $this->data['php_version_extra'] ?? null;
+        return isset($this->data['php_version_extra']) ? $this->data['php_version_extra'] : null;
     }
 
     /**
@@ -207,6 +224,16 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
     }
 
     /**
+     * Gets the application name.
+     *
+     * @return string The application name
+     */
+    public function getAppName()
+    {
+        return $this->data['name'];
+    }
+
+    /**
      * Gets the environment.
      *
      * @return string The environment
@@ -219,7 +246,7 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
     /**
      * Returns true if the debug is enabled.
      *
-     * @return bool|string true if debug is enabled, false otherwise or a string if no kernel was set
+     * @return bool true if debug is enabled, false otherwise
      */
     public function isDebug()
     {
@@ -284,7 +311,7 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
      *
      * @return string One of: dev, stable, eom, eol
      */
-    private function determineSymfonyState(): string
+    private function determineSymfonyState()
     {
         $now = new \DateTime();
         $eom = \DateTime::createFromFormat('d/m/Y', '01/'.Kernel::END_OF_MAINTENANCE)->modify('last day of this month');

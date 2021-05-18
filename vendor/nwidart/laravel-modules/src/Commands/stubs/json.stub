@@ -3,11 +3,14 @@
     "alias": "$LOWER_NAME$",
     "description": "",
     "keywords": [],
-    "priority": 0,
+    "active": 1,
+    "order": 0,
     "providers": [
-        "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\$PROVIDER_NAMESPACE$\\$STUDLY_NAME$ServiceProvider"
+        "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\Providers\\$STUDLY_NAME$ServiceProvider"
     ],
     "aliases": {},
-    "files": [],
+    "files": [
+        "start.php"
+    ],
     "requires": []
 }

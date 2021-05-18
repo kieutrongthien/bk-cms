@@ -1,26 +1,11 @@
 <?php
 
-/*
- * This file is part of the league/commonmark package.
- *
- * (c) Colin O'Dell <colinodell@gmail.com>
- *
- * Original code based on the CommonMark JS reference parser (https://bitly.com/commonmark-js)
- *  - (c) John MacFarlane
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace League\CommonMark\Node;
+
+use League\CommonMark\Util\ArrayCollection;
 
 abstract class Node
 {
-    /**
-     * @var int
-     */
-    protected $depth = 0;
-
     /**
      * @var Node|null
      */
@@ -46,38 +31,40 @@ abstract class Node
      */
     protected $lastChild;
 
-    public function previous(): ?Node
+    /**
+     * @return Node|null
+     */
+    public function previous()
     {
         return $this->previous;
     }
 
-    public function next(): ?Node
+    /**
+     * @return Node|null
+     */
+    public function next()
     {
         return $this->next;
     }
 
-    public function parent(): ?Node
+    /**
+     * @return Node|null
+     */
+    public function parent()
     {
         return $this->parent;
     }
 
     /**
      * @param Node|null $node
-     *
-     * @return void
      */
     protected function setParent(Node $node = null)
     {
         $this->parent = $node;
-        $this->depth = ($node === null) ? 0 : $node->depth + 1;
     }
 
     /**
-     * Inserts the $sibling node after $this
-     *
      * @param Node $sibling
-     *
-     * @return void
      */
     public function insertAfter(Node $sibling)
     {
@@ -92,17 +79,13 @@ abstract class Node
         $this->next = $sibling;
         $sibling->setParent($this->parent);
 
-        if (!$sibling->next && $sibling->parent) {
+        if (!$sibling->next) {
             $sibling->parent->lastChild = $sibling;
         }
     }
 
     /**
-     * Inserts the $sibling node before $this
-     *
      * @param Node $sibling
-     *
-     * @return void
      */
     public function insertBefore(Node $sibling)
     {
@@ -117,16 +100,11 @@ abstract class Node
         $this->previous = $sibling;
         $sibling->setParent($this->parent);
 
-        if (!$sibling->previous && $sibling->parent) {
+        if (!$sibling->previous) {
             $sibling->parent->firstChild = $sibling;
         }
     }
 
-    /**
-     * @param Node $replacement
-     *
-     * @return void
-     */
     public function replaceWith(Node $replacement)
     {
         $replacement->detach();
@@ -134,9 +112,6 @@ abstract class Node
         $this->detach();
     }
 
-    /**
-     * @return void
-     */
     public function detach()
     {
         if ($this->previous) {
@@ -154,17 +129,25 @@ abstract class Node
         $this->parent = null;
         $this->next = null;
         $this->previous = null;
-        $this->depth = 0;
     }
 
-    abstract public function isContainer(): bool;
+    /**
+     * @return bool
+     */
+    abstract public function isContainer();
 
-    public function firstChild(): ?Node
+    /**
+     * @return Node|null
+     */
+    public function firstChild()
     {
         return $this->firstChild;
     }
 
-    public function lastChild(): ?Node
+    /**
+     * @return Node|null
+     */
+    public function lastChild()
     {
         return $this->lastChild;
     }
@@ -172,7 +155,7 @@ abstract class Node
     /**
      * @return Node[]
      */
-    public function children(): iterable
+    public function children()
     {
         $children = [];
         for ($current = $this->firstChild; null !== $current; $current = $current->next) {
@@ -184,8 +167,6 @@ abstract class Node
 
     /**
      * @param Node $child
-     *
-     * @return void
      */
     public function appendChild(Node $child)
     {
@@ -199,11 +180,7 @@ abstract class Node
     }
 
     /**
-     * Adds $child as the very first child of $this
-     *
      * @param Node $child
-     *
-     * @return void
      */
     public function prependChild(Node $child)
     {
@@ -218,8 +195,6 @@ abstract class Node
 
     /**
      * Detaches all child nodes of given node
-     *
-     * @return void
      */
     public function detachChildren()
     {
@@ -232,12 +207,16 @@ abstract class Node
     /**
      * Replace all children of given node with collection of another
      *
-     * @param iterable<Node> $children
+     * @param array $children
      *
      * @return $this
      */
-    public function replaceChildren(iterable $children)
+    public function replaceChildren(array $children)
     {
+        if (!is_array($children) && !(is_object($children) && $children instanceof ArrayCollection)) {
+            throw new \InvalidArgumentException(sprintf('Expect iterable, got %s', get_class($children)));
+        }
+
         $this->detachChildren();
         foreach ($children as $item) {
             $this->appendChild($item);
@@ -246,34 +225,11 @@ abstract class Node
         return $this;
     }
 
-    public function getDepth(): int
-    {
-        return $this->depth;
-    }
-
-    public function walker(): NodeWalker
+    /**
+     * @return NodeWalker
+     */
+    public function walker()
     {
         return new NodeWalker($this);
-    }
-
-    /**
-     * Clone the current node and its children
-     *
-     * WARNING: This is a recursive function and should not be called on deeply-nested node trees!
-     */
-    public function __clone()
-    {
-        // Cloned nodes are detached from their parents, siblings, and children
-        $this->parent = null;
-        $this->previous = null;
-        $this->next = null;
-        // But save a copy of the children since we'll need that in a moment
-        $children = $this->children();
-        $this->detachChildren();
-
-        // The original children get cloned and re-added
-        foreach ($children as $child) {
-            $this->appendChild(clone $child);
-        }
     }
 }

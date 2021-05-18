@@ -7,13 +7,31 @@ use Illuminate\Support\Str;
 trait InteractsWithContentTypes
 {
     /**
+     * Determine if the given content types match.
+     *
+     * @param  string  $actual
+     * @param  string  $type
+     * @return bool
+     */
+    public static function matchesType($actual, $type)
+    {
+        if ($actual === $type) {
+            return true;
+        }
+
+        $split = explode('/', $actual);
+
+        return isset($split[1]) && preg_match('#'.preg_quote($split[0], '#').'/.+\+'.preg_quote($split[1], '#').'#', $type);
+    }
+
+    /**
      * Determine if the request is sending JSON.
      *
      * @return bool
      */
     public function isJson()
     {
-        return Str::contains($this->header('CONTENT_TYPE') ?? '', ['/json', '+json']);
+        return Str::contains($this->header('CONTENT_TYPE'), ['/json', '+json']);
     }
 
     /**
@@ -23,11 +41,11 @@ trait InteractsWithContentTypes
      */
     public function expectsJson()
     {
-        return ($this->ajax() && ! $this->pjax() && $this->acceptsAnyContentType()) || $this->wantsJson();
+        return ($this->ajax() && ! $this->pjax()) || $this->wantsJson();
     }
 
     /**
-     * Determine if the current request is asking for JSON.
+     * Determine if the current request is asking for JSON in return.
      *
      * @return bool
      */
@@ -101,20 +119,6 @@ trait InteractsWithContentTypes
     }
 
     /**
-     * Determine if the current request accepts any content type.
-     *
-     * @return bool
-     */
-    public function acceptsAnyContentType()
-    {
-        $acceptable = $this->getAcceptableContentTypes();
-
-        return count($acceptable) === 0 || (
-            isset($acceptable[0]) && ($acceptable[0] === '*/*' || $acceptable[0] === '*')
-        );
-    }
-
-    /**
      * Determines whether a request accepts JSON.
      *
      * @return bool
@@ -132,24 +136,6 @@ trait InteractsWithContentTypes
     public function acceptsHtml()
     {
         return $this->accepts('text/html');
-    }
-
-    /**
-     * Determine if the given content types match.
-     *
-     * @param  string  $actual
-     * @param  string  $type
-     * @return bool
-     */
-    public static function matchesType($actual, $type)
-    {
-        if ($actual === $type) {
-            return true;
-        }
-
-        $split = explode('/', $actual);
-
-        return isset($split[1]) && preg_match('#'.preg_quote($split[0], '#').'/.+\+'.preg_quote($split[1], '#').'#', $type);
     }
 
     /**

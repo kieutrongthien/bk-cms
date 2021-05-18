@@ -19,7 +19,7 @@ use League\CommonMark\Block\Element\BlockQuote;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\HtmlElement;
 
-final class BlockQuoteRenderer implements BlockRendererInterface
+class BlockQuoteRenderer implements BlockRendererInterface
 {
     /**
      * @param BlockQuote               $block
@@ -28,13 +28,16 @@ final class BlockQuoteRenderer implements BlockRendererInterface
      *
      * @return HtmlElement
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof BlockQuote)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         $filling = $htmlRenderer->renderBlocks($block->children());
         if ($filling === '') {

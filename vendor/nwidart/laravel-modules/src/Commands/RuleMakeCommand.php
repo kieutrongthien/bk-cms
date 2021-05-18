@@ -35,9 +35,7 @@ class RuleMakeCommand extends GeneratorCommand
 
     public function getDefaultNamespace() : string
     {
-        $module = $this->laravel['modules'];
-
-        return $module->config('paths.generator.rules.namespace') ?: $module->config('paths.generator.rules.path', 'Rules');
+        return $this->laravel['modules']->config('paths.generator.rules.path', 'Rules');
     }
 
     /**

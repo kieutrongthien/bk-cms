@@ -25,21 +25,19 @@ class UseCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $module = Str::studly($this->argument('module'));
 
         if (!$this->laravel['modules']->has($module)) {
             $this->error("Module [{$module}] does not exists.");
 
-            return E_ERROR;
+            return;
         }
 
         $this->laravel['modules']->setUsed($module);
 
         $this->info("Module [{$module}] used successfully.");
-
-        return 0;
     }
 
     /**

@@ -19,7 +19,7 @@ use League\CommonMark\Block\Element\ThematicBreak;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\HtmlElement;
 
-final class ThematicBreakRenderer implements BlockRendererInterface
+class ThematicBreakRenderer implements BlockRendererInterface
 {
     /**
      * @param ThematicBreak            $block
@@ -28,13 +28,16 @@ final class ThematicBreakRenderer implements BlockRendererInterface
      *
      * @return HtmlElement
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof ThematicBreak)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         return new HtmlElement('hr', $attrs, '', true);
     }

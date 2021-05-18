@@ -15,24 +15,22 @@
 namespace League\CommonMark;
 
 use League\CommonMark\Block\Element\AbstractBlock;
-use League\CommonMark\Block\Renderer\BlockRendererInterface;
 use League\CommonMark\Inline\Element\AbstractInline;
-use League\CommonMark\Inline\Renderer\InlineRendererInterface;
 
 /**
  * Renders a parsed AST to HTML
  */
-final class HtmlRenderer implements ElementRendererInterface
+class HtmlRenderer implements ElementRendererInterface
 {
     /**
-     * @var EnvironmentInterface
+     * @var Environment
      */
     protected $environment;
 
     /**
-     * @param EnvironmentInterface $environment
+     * @param Environment $environment
      */
-    public function __construct(EnvironmentInterface $environment)
+    public function __construct(Environment $environment)
     {
         $this->environment = $environment;
     }
@@ -41,11 +39,28 @@ final class HtmlRenderer implements ElementRendererInterface
      * @param string $option
      * @param mixed  $default
      *
-     * @return mixed|null
+     * @return mixed
      */
-    public function getOption(string $option, $default = null)
+    public function getOption($option, $default = null)
     {
         return $this->environment->getConfig('renderer/' . $option, $default);
+    }
+
+    /**
+     * @param string $string
+     * @param bool   $preserveEntities
+     *
+     * @return string
+     */
+    public function escape($string, $preserveEntities = false)
+    {
+        if ($preserveEntities) {
+            $string = preg_replace('/[&](?![#](x[a-f0-9]{1,8}|[0-9]{1,8});|[a-z][a-z0-9]{1,31};)/i', '&amp;', $string);
+        } else {
+            $string = str_replace('&', '&amp;', $string);
+        }
+
+        return str_replace(['<', '>', '"'], ['&lt;', '&gt;', '&quot;'], $string);
     }
 
     /**
@@ -55,18 +70,14 @@ final class HtmlRenderer implements ElementRendererInterface
      *
      * @return string
      */
-    public function renderInline(AbstractInline $inline): string
+    protected function renderInline(AbstractInline $inline)
     {
-        $renderers = $this->environment->getInlineRenderersForClass(\get_class($inline));
-
-        /** @var InlineRendererInterface $renderer */
-        foreach ($renderers as $renderer) {
-            if (($result = $renderer->render($inline, $this)) !== null) {
-                return $result;
-            }
+        $renderer = $this->environment->getInlineRendererForClass(get_class($inline));
+        if (!$renderer) {
+            throw new \RuntimeException('Unable to find corresponding renderer for inline type ' . get_class($inline));
         }
 
-        throw new \RuntimeException('Unable to find corresponding renderer for inline type ' . \get_class($inline));
+        return $renderer->render($inline, $this);
     }
 
     /**
@@ -74,14 +85,14 @@ final class HtmlRenderer implements ElementRendererInterface
      *
      * @return string
      */
-    public function renderInlines(iterable $inlines): string
+    public function renderInlines($inlines)
     {
         $result = [];
         foreach ($inlines as $inline) {
             $result[] = $this->renderInline($inline);
         }
 
-        return \implode('', $result);
+        return implode('', $result);
     }
 
     /**
@@ -92,18 +103,14 @@ final class HtmlRenderer implements ElementRendererInterface
      *
      * @return string
      */
-    public function renderBlock(AbstractBlock $block, bool $inTightList = false): string
+    public function renderBlock(AbstractBlock $block, $inTightList = false)
     {
-        $renderers = $this->environment->getBlockRenderersForClass(\get_class($block));
-
-        /** @var BlockRendererInterface $renderer */
-        foreach ($renderers as $renderer) {
-            if (($result = $renderer->render($block, $this, $inTightList)) !== null) {
-                return $result;
-            }
+        $renderer = $this->environment->getBlockRendererForClass(get_class($block));
+        if (!$renderer) {
+            throw new \RuntimeException('Unable to find corresponding renderer for block type ' . get_class($block));
         }
 
-        throw new \RuntimeException('Unable to find corresponding renderer for block type ' . \get_class($block));
+        return $renderer->render($block, $this, $inTightList);
     }
 
     /**
@@ -112,7 +119,7 @@ final class HtmlRenderer implements ElementRendererInterface
      *
      * @return string
      */
-    public function renderBlocks(iterable $blocks, bool $inTightList = false): string
+    public function renderBlocks($blocks, $inTightList = false)
     {
         $result = [];
         foreach ($blocks as $block) {
@@ -121,6 +128,6 @@ final class HtmlRenderer implements ElementRendererInterface
 
         $separator = $this->getOption('block_separator', "\n");
 
-        return \implode($separator, $result);
+        return implode($separator, $result);
     }
 }

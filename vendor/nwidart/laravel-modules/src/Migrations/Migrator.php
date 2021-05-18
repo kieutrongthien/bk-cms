@@ -4,15 +4,15 @@ namespace Nwidart\Modules\Migrations;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Nwidart\Modules\Module;
 use Nwidart\Modules\Support\Config\GenerateConfigReader;
 
 class Migrator
 {
     /**
-     * Module instance.
-     * @var Module
+     * Pingpong Module instance.
+     *
+     * @var \Nwidart\Modules\Module
      */
     protected $module;
 
@@ -32,13 +32,13 @@ class Migrator
 
     /**
      * Create new instance.
-     * @param Module $module
-     * @param Application $application
+     *
+     * @param \Nwidart\Modules\Module $module
      */
-    public function __construct(Module $module, Application $application)
+    public function __construct(Module $module)
     {
         $this->module = $module;
-        $this->laravel = $application;
+        $this->laravel = $module->getLaravel();
     }
 
     /**
@@ -200,7 +200,7 @@ class Migrator
     {
         $file = implode('_', array_slice(explode('_', $file), 4));
 
-        $class = Str::studly($file);
+        $class = studly_case($file);
 
         return new $class();
     }

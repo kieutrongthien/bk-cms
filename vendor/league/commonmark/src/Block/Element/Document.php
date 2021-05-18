@@ -16,42 +16,64 @@ namespace League\CommonMark\Block\Element;
 
 use League\CommonMark\Cursor;
 use League\CommonMark\Reference\ReferenceMap;
-use League\CommonMark\Reference\ReferenceMapInterface;
 
-/**
- * @method children() AbstractBlock[]
- */
 class Document extends AbstractBlock
 {
-    /** @var ReferenceMapInterface */
+    /***
+     * @var ReferenceMap
+     */
     protected $referenceMap;
 
-    public function __construct(?ReferenceMapInterface $referenceMap = null)
+    public function __construct()
     {
+        parent::__construct();
+
         $this->setStartLine(1);
 
-        $this->referenceMap = $referenceMap ?? new ReferenceMap();
+        $this->referenceMap = new ReferenceMap();
     }
 
     /**
-     * @return ReferenceMapInterface
+     * @return ReferenceMap
      */
-    public function getReferenceMap(): ReferenceMapInterface
+    public function getReferenceMap()
     {
         return $this->referenceMap;
     }
 
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return true;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
     {
         return false;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
+    {
+        return false;
+    }
+
+    public function matchesNextLine(Cursor $cursor)
     {
         return true;
     }

@@ -20,31 +20,19 @@ use League\CommonMark\Block\Element\ListItem;
 use League\CommonMark\Block\Element\Paragraph;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
-use League\CommonMark\Util\ConfigurationAwareInterface;
-use League\CommonMark\Util\ConfigurationInterface;
 use League\CommonMark\Util\RegexHelper;
 
-final class ListParser implements BlockParserInterface, ConfigurationAwareInterface
+class ListParser extends AbstractBlockParser
 {
-    /** @var ConfigurationInterface|null */
-    private $config;
-
-    /** @var string|null */
-    private $listMarkerRegex;
-
-    public function setConfiguration(ConfigurationInterface $configuration)
-    {
-        $this->config = $configuration;
-    }
-
-    public function parse(ContextInterface $context, Cursor $cursor): bool
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     *
+     * @return bool
+     */
+    public function parse(ContextInterface $context, Cursor $cursor)
     {
         if ($cursor->isIndented() && !($context->getContainer() instanceof ListBlock)) {
-            return false;
-        }
-
-        $indent = $cursor->getIndent();
-        if ($indent >= 4) {
             return false;
         }
 
@@ -52,24 +40,23 @@ final class ListParser implements BlockParserInterface, ConfigurationAwareInterf
         $tmpCursor->advanceToNextNonSpaceOrTab();
         $rest = $tmpCursor->getRemainder();
 
-        if (\preg_match($this->listMarkerRegex ?? $this->generateListMarkerRegex(), $rest) === 1) {
-            $data = new ListData();
-            $data->markerOffset = $indent;
-            $data->type = ListBlock::TYPE_BULLET;
+        $data = new ListData();
+        $data->markerOffset = $cursor->getIndent();
+
+        if ($matches = RegexHelper::matchAll('/^[*+-]/', $rest)) {
+            $data->type = ListBlock::TYPE_UNORDERED;
             $data->delimiter = null;
-            $data->bulletChar = $rest[0];
-            $markerLength = 1;
+            $data->bulletChar = $matches[0][0];
         } elseif (($matches = RegexHelper::matchAll('/^(\d{1,9})([.)])/', $rest)) && (!($context->getContainer() instanceof Paragraph) || $matches[1] === '1')) {
-            $data = new ListData();
-            $data->markerOffset = $indent;
             $data->type = ListBlock::TYPE_ORDERED;
-            $data->start = (int) $matches[1];
+            $data->start = intval($matches[1]);
             $data->delimiter = $matches[2];
             $data->bulletChar = null;
-            $markerLength = \strlen($matches[0]);
         } else {
             return false;
         }
+
+        $markerLength = strlen($matches[0]);
 
         // Make sure we have spaces after
         $nextChar = $tmpCursor->peek($markerLength);
@@ -78,8 +65,7 @@ final class ListParser implements BlockParserInterface, ConfigurationAwareInterf
         }
 
         // If it interrupts paragraph, make sure first line isn't blank
-        $container = $context->getContainer();
-        if ($container instanceof Paragraph && !RegexHelper::matchAt(RegexHelper::REGEX_NON_SPACE, $rest, $markerLength)) {
+        if ($context->getContainer() instanceof Paragraph && !RegexHelper::matchAt(RegexHelper::REGEX_NON_SPACE, $rest, $markerLength)) {
             return false;
         }
 
@@ -89,7 +75,8 @@ final class ListParser implements BlockParserInterface, ConfigurationAwareInterf
         $data->padding = $this->calculateListMarkerPadding($cursor, $markerLength);
 
         // add the list if needed
-        if (!($container instanceof ListBlock) || !$data->equals($container->getListData())) {
+        $container = $context->getContainer();
+        if (!$container || !($context->getContainer() instanceof ListBlock) || !$data->equals($container->getListData())) {
             $context->addBlock(new ListBlock($data));
         }
 
@@ -105,7 +92,7 @@ final class ListParser implements BlockParserInterface, ConfigurationAwareInterf
      *
      * @return int
      */
-    private function calculateListMarkerPadding(Cursor $cursor, int $markerLength): int
+    private function calculateListMarkerPadding(Cursor $cursor, $markerLength)
     {
         $start = $cursor->saveState();
         $spacesStartCol = $cursor->getColumn();
@@ -127,21 +114,5 @@ final class ListParser implements BlockParserInterface, ConfigurationAwareInterf
         }
 
         return $markerLength + $spacesAfterMarker;
-    }
-
-    private function generateListMarkerRegex(): string
-    {
-        // No configuration given - use the defaults
-        if ($this->config === null) {
-            return $this->listMarkerRegex = '/^[*+-]/';
-        }
-
-        $markers = $this->config->get('unordered_list_markers', ['*', '+', '-']);
-
-        if (!\is_array($markers)) {
-            throw new \RuntimeException('Invalid configuration option "unordered_list_markers": value must be an array of strings');
-        }
-
-        return $this->listMarkerRegex = '/^[' . \preg_quote(\implode('', $markers), '/') . ']/';
     }
 }

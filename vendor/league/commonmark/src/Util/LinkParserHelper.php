@@ -16,7 +16,7 @@ namespace League\CommonMark\Util;
 
 use League\CommonMark\Cursor;
 
-final class LinkParserHelper
+class LinkParserHelper
 {
     /**
      * Attempt to parse link destination
@@ -25,39 +25,64 @@ final class LinkParserHelper
      *
      * @return null|string The string, or null if no match
      */
-    public static function parseLinkDestination(Cursor $cursor): ?string
+    public static function parseLinkDestination(Cursor $cursor)
     {
-        if ($res = $cursor->match(RegexHelper::REGEX_LINK_DESTINATION_BRACES)) {
+        if ($res = $cursor->match(RegexHelper::getInstance()->getLinkDestinationBracesRegex())) {
             // Chop off surrounding <..>:
             return UrlEncoder::unescapeAndEncode(
-                RegexHelper::unescape(\substr($res, 1, -1))
+                RegexHelper::unescape(substr($res, 1, strlen($res) - 2))
             );
         }
 
-        if ($cursor->getCharacter() === '<') {
-            return null;
+        $oldState = $cursor->saveState();
+        $openParens = 0;
+        while (($c = $cursor->getCharacter()) !== null) {
+            if ($c === '\\') {
+                $cursor->advance();
+                if ($cursor->getCharacter()) {
+                    $cursor->advance();
+                }
+            } elseif ($c === '(') {
+                $cursor->advance();
+                $openParens++;
+            } elseif ($c === ')') {
+                if ($openParens < 1) {
+                    break;
+                } else {
+                    $cursor->advance();
+                    $openParens--;
+                }
+            } elseif (preg_match(RegexHelper::REGEX_WHITESPACE_CHAR, $c)) {
+                break;
+            } else {
+                $cursor->advance();
+            }
         }
 
-        $destination = self::manuallyParseLinkDestination($cursor);
-        if ($destination === null) {
-            return null;
-        }
+        $newPos = $cursor->getPosition();
+        $cursor->restoreState($oldState);
+
+        $cursor->advanceBy($newPos - $cursor->getPosition());
+
+        $res = $cursor->getPreviousText();
 
         return UrlEncoder::unescapeAndEncode(
-            RegexHelper::unescape($destination)
+            RegexHelper::unescape($res)
         );
     }
 
-    public static function parseLinkLabel(Cursor $cursor): int
+    /**
+     * @param Cursor $cursor
+     *
+     * @return int
+     */
+    public static function parseLinkLabel(Cursor $cursor)
     {
-        $match = $cursor->match('/^\[(?:[^\\\\\[\]]|\\\\.){0,1000}\]/');
-        if ($match === null) {
-            return 0;
-        }
+        $escapedChar = RegexHelper::getInstance()->getPartialRegex(RegexHelper::ESCAPED_CHAR);
+        $match = $cursor->match('/^\[(?:[^\\\\\[\]]|' . $escapedChar . '|\\\\)*\]/');
+        $length = mb_strlen($match, 'utf-8');
 
-        $length = \mb_strlen($match, 'utf-8');
-
-        if ($length > 1001) {
+        if ($match === null || $length > 1001 || preg_match('/[^\\\\]\\\\\]$/', $match)) {
             return 0;
         }
 
@@ -71,55 +96,11 @@ final class LinkParserHelper
      *
      * @return null|string The string, or null if no match
      */
-    public static function parseLinkTitle(Cursor $cursor): ?string
+    public static function parseLinkTitle(Cursor $cursor)
     {
-        if ($title = $cursor->match('/' . RegexHelper::PARTIAL_LINK_TITLE . '/')) {
+        if ($title = $cursor->match(RegexHelper::getInstance()->getLinkTitleRegex())) {
             // Chop off quotes from title and unescape
-            return RegexHelper::unescape(\substr($title, 1, -1));
+            return RegexHelper::unescape(substr($title, 1, strlen($title) - 2));
         }
-
-        return null;
-    }
-
-    private static function manuallyParseLinkDestination(Cursor $cursor): ?string
-    {
-        $oldPosition = $cursor->getPosition();
-        $oldState = $cursor->saveState();
-
-        $openParens = 0;
-        while (($c = $cursor->getCharacter()) !== null) {
-            if ($c === '\\' && $cursor->peek() !== null && RegexHelper::isEscapable($cursor->peek())) {
-                $cursor->advanceBy(2);
-            } elseif ($c === '(') {
-                $cursor->advanceBy(1);
-                $openParens++;
-            } elseif ($c === ')') {
-                if ($openParens < 1) {
-                    break;
-                }
-
-                $cursor->advanceBy(1);
-                $openParens--;
-            } elseif (\preg_match(RegexHelper::REGEX_WHITESPACE_CHAR, $c)) {
-                break;
-            } else {
-                $cursor->advanceBy(1);
-            }
-        }
-
-        if ($openParens !== 0) {
-            return null;
-        }
-
-        if ($cursor->getPosition() === $oldPosition && $c !== ')') {
-            return null;
-        }
-
-        $newPos = $cursor->getPosition();
-        $cursor->restoreState($oldState);
-
-        $cursor->advanceBy($newPos - $cursor->getPosition());
-
-        return $cursor->getPreviousText();
     }
 }

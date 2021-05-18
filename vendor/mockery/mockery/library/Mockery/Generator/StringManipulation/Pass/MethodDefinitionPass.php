@@ -1,27 +1,8 @@
 <?php
-/**
- * Mockery
- *
- * LICENSE
- *
- * This source file is subject to the new BSD license that is bundled
- * with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://github.com/padraic/mockery/blob/master/LICENSE
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to padraic@php.net so we can send you a copy immediately.
- *
- * @category   Mockery
- * @package    Mockery
- * @copyright  Copyright (c) 2010 Pádraic Brady (http://blog.astrumfutura.com)
- * @license    http://github.com/padraic/mockery/blob/master/LICENSE New BSD License
- */
 
 namespace Mockery\Generator\StringManipulation\Pass;
 
 use Mockery\Generator\Method;
-use Mockery\Generator\Parameter;
 use Mockery\Generator\MockConfiguration;
 
 class MethodDefinitionPass implements Pass
@@ -68,7 +49,7 @@ class MethodDefinitionPass implements Pass
         $methodParams = array();
         $params = $method->getParameters();
         foreach ($params as $param) {
-            $paramDef = $this->renderTypeHint($param);
+            $paramDef = $param->getTypeHintAsString();
             $paramDef .= $param->isPassedByReference() ? '&' : '';
             $paramDef .= $param->isVariadic() ? '...' : '';
             $paramDef .= '$' . $param->getName();
@@ -89,7 +70,6 @@ class MethodDefinitionPass implements Pass
     protected function renderReturnType(Method $method)
     {
         $type = $method->getReturnType();
-
         return $type ? sprintf(': %s', $type) : '';
     }
 
@@ -100,15 +80,9 @@ class MethodDefinitionPass implements Pass
         return $class;
     }
 
-    protected function renderTypeHint(Parameter $param)
-    {
-        $typeHint = $param->getTypeHint();
-
-        return $typeHint === null ? '' : sprintf('%s ', $typeHint);
-    }
-
     private function renderMethodBody($method, $config)
     {
+        /** @var \ReflectionMethod $method */
         $invoke = $method->isStatic() ? 'static::_mockery_handleStaticMethodCall' : '$this->_mockery_handleMethodCall';
         $body = <<<BODY
 {
@@ -129,6 +103,9 @@ BODY;
             for ($i = 0; $i < $paramCount; ++$i) {
                 $param = $params[$i];
                 if (strpos($param, '&') !== false) {
+                    if (($stripDefaultValue = strpos($param, '=')) !== false) {
+                        $param = trim(substr($param, 0, $stripDefaultValue));
+                    }
                     $body .= <<<BODY
 if (\$argc > $i) {
     \$argv[$i] = {$param};
@@ -138,6 +115,7 @@ BODY;
                 }
             }
         } else {
+            /** @var \ReflectionParameter[] $params */
             $params = array_values($method->getParameters());
             $paramCount = count($params);
             for ($i = 0; $i < $paramCount; ++$i) {
@@ -154,13 +132,24 @@ BODY;
             }
         }
 
-        $body .= "\$ret = {$invoke}(__FUNCTION__, \$argv);\n";
+        $body .= $this->getReturnStatement($method, $invoke);
 
-        if ($method->getReturnType() !== "void") {
-            $body .= "return \$ret;\n";
+        return $body;
+    }
+
+    private function getReturnStatement($method, $invoke)
+    {
+        if ($method->getReturnType() === 'void') {
+            return <<<BODY
+{$invoke}(__FUNCTION__, \$argv);
+}
+BODY;
         }
 
-        $body .= "}\n";
-        return $body;
+        return <<<BODY
+\$ret = {$invoke}(__FUNCTION__, \$argv);
+return \$ret;
+}
+BODY;
     }
 }

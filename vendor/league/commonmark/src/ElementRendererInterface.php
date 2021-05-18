@@ -26,23 +26,24 @@ interface ElementRendererInterface
      * @param string $option
      * @param mixed  $default
      *
-     * @return mixed|null
+     * @return mixed
      */
-    public function getOption(string $option, $default = null);
+    public function getOption($option, $default = null);
 
     /**
-     * @param AbstractInline $inline
+     * @param string $string
+     * @param bool   $preserveEntities
      *
      * @return string
      */
-    public function renderInline(AbstractInline $inline): string;
+    public function escape($string, $preserveEntities = false);
 
     /**
      * @param AbstractInline[] $inlines
      *
      * @return string
      */
-    public function renderInlines(iterable $inlines): string;
+    public function renderInlines($inlines);
 
     /**
      * @param AbstractBlock $block
@@ -52,7 +53,7 @@ interface ElementRendererInterface
      *
      * @return string
      */
-    public function renderBlock(AbstractBlock $block, bool $inTightList = false): string;
+    public function renderBlock(AbstractBlock $block, $inTightList = false);
 
     /**
      * @param AbstractBlock[] $blocks
@@ -60,5 +61,5 @@ interface ElementRendererInterface
      *
      * @return string
      */
-    public function renderBlocks(iterable $blocks, bool $inTightList = false): string;
+    public function renderBlocks($blocks, $inTightList = false);
 }

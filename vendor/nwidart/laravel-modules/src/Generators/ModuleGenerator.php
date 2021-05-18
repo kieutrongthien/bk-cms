@@ -6,8 +6,7 @@ use Illuminate\Config\Repository as Config;
 use Illuminate\Console\Command as Console;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Nwidart\Modules\Contracts\ActivatorInterface;
-use Nwidart\Modules\FileRepository;
+use Nwidart\Modules\Repository;
 use Nwidart\Modules\Support\Config\GenerateConfigReader;
 use Nwidart\Modules\Support\Stub;
 
@@ -42,16 +41,9 @@ class ModuleGenerator extends Generator
     protected $console;
 
     /**
-     * The activator instance
+     * The pingpong module instance.
      *
-     * @var ActivatorInterface
-     */
-    protected $activator;
-
-    /**
-     * The module instance.
-     *
-     * @var \Nwidart\Modules\Module
+     * @var Module
      */
     protected $module;
 
@@ -63,67 +55,45 @@ class ModuleGenerator extends Generator
     protected $force = false;
 
     /**
-     * set default module type.
-     *
-     * @var string
-     */
-    protected $type = 'web';
-
-    /**
-     * Enables the module.
+     * Generate a plain module.
      *
      * @var bool
      */
-    protected $isActive = false;
+    protected $plain = false;
 
     /**
      * The constructor.
+     *
      * @param $name
-     * @param FileRepository $module
+     * @param Repository $module
      * @param Config     $config
      * @param Filesystem $filesystem
      * @param Console    $console
      */
     public function __construct(
         $name,
-        FileRepository $module = null,
+        Repository $module = null,
         Config $config = null,
         Filesystem $filesystem = null,
-        Console $console = null,
-        ActivatorInterface $activator = null
+        Console $console = null
     ) {
         $this->name = $name;
         $this->config = $config;
         $this->filesystem = $filesystem;
         $this->console = $console;
         $this->module = $module;
-        $this->activator = $activator;
     }
 
     /**
-     * Set type.
+     * Set plain flag.
      *
-     * @param string $type
-     *
-     * @return $this
-     */
-    public function setType($type)
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    /**
-     * Set active flag.
-     *
-     * @param bool $active
+     * @param bool $plain
      *
      * @return $this
      */
-    public function setActive(bool $active)
+    public function setPlain($plain)
     {
-        $this->isActive = $active;
+        $this->plain = $plain;
 
         return $this;
     }
@@ -158,20 +128,6 @@ class ModuleGenerator extends Generator
     public function setConfig($config)
     {
         $this->config = $config;
-
-        return $this;
-    }
-
-    /**
-     * Set the modules activator
-     *
-     * @param ActivatorInterface $activator
-     *
-     * @return $this
-     */
-    public function setActivator(ActivatorInterface $activator)
-    {
-        $this->activator = $activator;
 
         return $this;
     }
@@ -225,9 +181,9 @@ class ModuleGenerator extends Generator
     }
 
     /**
-     * Get the module instance.
+     * Get the pingpong module instance.
      *
-     * @return \Nwidart\Modules\Module
+     * @return Module
      */
     public function getModule()
     {
@@ -235,7 +191,7 @@ class ModuleGenerator extends Generator
     }
 
     /**
-     * Set the module instance.
+     * Set the pingpong module instance.
      *
      * @param mixed $module
      *
@@ -285,7 +241,7 @@ class ModuleGenerator extends Generator
     /**
      * Generate the module.
      */
-    public function generate() : int
+    public function generate()
     {
         $name = $this->getName();
 
@@ -295,7 +251,7 @@ class ModuleGenerator extends Generator
             } else {
                 $this->console->error("Module [{$name}] already exist!");
 
-                return E_ERROR;
+                return;
             }
         }
 
@@ -303,20 +259,16 @@ class ModuleGenerator extends Generator
 
         $this->generateModuleJsonFile();
 
-        if ($this->type !== 'plain') {
+        if ($this->plain !== true) {
             $this->generateFiles();
             $this->generateResources();
         }
 
-        if ($this->type === 'plain') {
+        if ($this->plain === true) {
             $this->cleanModuleJsonFile();
         }
 
-        $this->activator->setActiveByName($name, $this->isActive);
-
         $this->console->info("Module [{$name}] created successfully.");
-
-        return 0;
     }
 
     /**
@@ -373,32 +325,22 @@ class ModuleGenerator extends Generator
      */
     public function generateResources()
     {
-        if (GenerateConfigReader::read('seeder')->generate() === true) {
-            $this->console->call('module:make-seed', [
-                'name' => $this->getName(),
-                'module' => $this->getName(),
-                '--master' => true,
-            ]);
-        }
+        $this->console->call('module:make-seed', [
+            'name' => $this->getName(),
+            'module' => $this->getName(),
+            '--master' => true,
+        ]);
 
-        if (GenerateConfigReader::read('provider')->generate() === true) {
-            $this->console->call('module:make-provider', [
-                'name' => $this->getName() . 'ServiceProvider',
-                'module' => $this->getName(),
-                '--master' => true,
-            ]);
-            $this->console->call('module:route-provider', [
-                'module' => $this->getName(),
-            ]);
-        }
+        $this->console->call('module:make-provider', [
+            'name' => $this->getName() . 'ServiceProvider',
+            'module' => $this->getName(),
+            '--master' => true,
+        ]);
 
-        if (GenerateConfigReader::read('controller')->generate() === true) {
-            $options = $this->type=='api'?['--api'=>true]:[];
-            $this->console->call('module:make-controller', [
-                'controller' => $this->getName() . 'Controller',
-                'module' => $this->getName(),
-            ]+$options);
-        }
+        $this->console->call('module:make-controller', [
+            'controller' => $this->getName() . 'Controller',
+            'module' => $this->getName(),
+        ]);
     }
 
     /**
@@ -444,13 +386,8 @@ class ModuleGenerator extends Generator
 
         $replaces = [];
 
-        if ($stub === 'json' || $stub === 'composer') {
-            if (in_array('PROVIDER_NAMESPACE', $keys, true) === false) {
-                $keys[] = 'PROVIDER_NAMESPACE';
-            }
-        }
         foreach ($keys as $key) {
-            if (method_exists($this, $method = 'get' . ucfirst(Str::studly(strtolower($key))) . 'Replacement')) {
+            if (method_exists($this, $method = 'get' . ucfirst(studly_case(strtolower($key))) . 'Replacement')) {
                 $replaces[$key] = $this->$method();
             } else {
                 $replaces[$key] = null;
@@ -555,8 +492,8 @@ class ModuleGenerator extends Generator
         return $this->module->config('composer.author.email');
     }
 
-    protected function getProviderNamespaceReplacement(): string
+    protected function getRoutesLocationReplacement()
     {
-        return str_replace('\\', '\\\\', GenerateConfigReader::read('provider')->getNamespace());
+        return '/' . $this->module->config('stubs.files.routes');
     }
 }

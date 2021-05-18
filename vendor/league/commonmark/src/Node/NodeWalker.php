@@ -1,20 +1,8 @@
 <?php
 
-/*
- * This file is part of the league/commonmark package.
- *
- * (c) Colin O'Dell <colinodell@gmail.com>
- *
- * Original code based on the CommonMark JS reference parser (https://bitly.com/commonmark-js)
- *  - (c) John MacFarlane
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace League\CommonMark\Node;
 
-final class NodeWalker
+class NodeWalker
 {
     /**
      * @var Node
@@ -22,7 +10,7 @@ final class NodeWalker
     private $root;
 
     /**
-     * @var Node|null
+     * @var Node
      */
     private $current;
 
@@ -31,6 +19,9 @@ final class NodeWalker
      */
     private $entering;
 
+    /**
+     * @param Node $root
+     */
     public function __construct(Node $root)
     {
         $this->root = $root;
@@ -45,12 +36,12 @@ final class NodeWalker
      *
      * @return NodeWalkerEvent|null
      */
-    public function next(): ?NodeWalkerEvent
+    public function next()
     {
         $current = $this->current;
         $entering = $this->entering;
         if (null === $current) {
-            return null;
+            return;
         }
 
         if ($entering && $current->isContainer()) {
@@ -78,10 +69,8 @@ final class NodeWalker
      *
      * @param Node $node
      * @param bool $entering
-     *
-     * @return void
      */
-    public function resumeAt(Node $node, bool $entering = true)
+    public function resumeAt(Node $node, $entering = true)
     {
         $this->current = $node;
         $this->entering = $entering;

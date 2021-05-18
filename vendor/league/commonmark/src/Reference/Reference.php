@@ -14,9 +14,10 @@
 
 namespace League\CommonMark\Reference;
 
-use League\CommonMark\Normalizer\TextNormalizer;
-
-final class Reference implements ReferenceInterface
+/**
+ * Link reference
+ */
+class Reference
 {
     /**
      * @var string
@@ -33,24 +34,40 @@ final class Reference implements ReferenceInterface
      */
     protected $title;
 
-    public function __construct(string $label, string $destination, string $title)
+    /**
+     * Constructor
+     *
+     * @param string $label
+     * @param string $destination
+     * @param string $title
+     */
+    public function __construct($label, $destination, $title)
     {
-        $this->label = $label;
+        $this->label = self::normalizeReference($label);
         $this->destination = $destination;
         $this->title = $title;
     }
 
-    public function getLabel(): string
+    /**
+     * @return string
+     */
+    public function getLabel()
     {
         return $this->label;
     }
 
-    public function getDestination(): string
+    /**
+     * @return string
+     */
+    public function getDestination()
     {
         return $this->destination;
     }
 
-    public function getTitle(): string
+    /**
+     * @return string
+     */
+    public function getTitle()
     {
         return $this->title;
     }
@@ -63,14 +80,13 @@ final class Reference implements ReferenceInterface
      * @param string $string
      *
      * @return string
-     *
-     * @deprecated Use TextNormalizer::normalize() instead
-     * @group legacy
      */
-    public static function normalizeReference(string $string): string
+    public static function normalizeReference($string)
     {
-        @trigger_error(sprintf('%s::normlizeReference() is deprecated; use %s::normalize() instead', self::class, TextNormalizer::class), E_USER_DEPRECATED);
+        // Collapse internal whitespace to single space and remove
+        // leading/trailing whitespace
+        $string = preg_replace('/\s+/', '', trim($string));
 
-        return (new TextNormalizer())->normalize($string);
+        return mb_strtoupper($string, 'UTF-8');
     }
 }

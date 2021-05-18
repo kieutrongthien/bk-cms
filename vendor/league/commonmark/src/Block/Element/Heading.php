@@ -17,7 +17,7 @@ namespace League\CommonMark\Block\Element;
 use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 
-class Heading extends AbstractStringContainerBlock implements InlineContainerInterface
+class Heading extends AbstractBlock implements InlineContainer
 {
     /**
      * @var int
@@ -28,13 +28,13 @@ class Heading extends AbstractStringContainerBlock implements InlineContainerInt
      * @param int             $level
      * @param string|string[] $contents
      */
-    public function __construct(int $level, $contents)
+    public function __construct($level, $contents)
     {
         parent::__construct();
 
         $this->level = $level;
 
-        if (!\is_array($contents)) {
+        if (!is_array($contents)) {
             $contents = [$contents];
         }
 
@@ -46,35 +46,61 @@ class Heading extends AbstractStringContainerBlock implements InlineContainerInt
     /**
      * @return int
      */
-    public function getLevel(): int
+    public function getLevel()
     {
         return $this->level;
     }
 
-    public function finalize(ContextInterface $context, int $endLineNumber)
+    public function finalize(ContextInterface $context, $endLineNumber)
     {
         parent::finalize($context, $endLineNumber);
 
-        $this->finalStringContents = \implode("\n", $this->strings->toArray());
+        $this->finalStringContents = implode("\n", $this->getStrings());
     }
 
-    public function canContain(AbstractBlock $block): bool
+    /**
+     * Returns true if this block can contain the given block as a child node
+     *
+     * @param AbstractBlock $block
+     *
+     * @return bool
+     */
+    public function canContain(AbstractBlock $block)
     {
         return false;
     }
 
-    public function isCode(): bool
+    /**
+     * Returns true if block type can accept lines of text
+     *
+     * @return bool
+     */
+    public function acceptsLines()
+    {
+        return true;
+    }
+
+    /**
+     * Whether this is a code block
+     *
+     * @return bool
+     */
+    public function isCode()
     {
         return false;
     }
 
-    public function matchesNextLine(Cursor $cursor): bool
+    public function matchesNextLine(Cursor $cursor)
     {
         return false;
     }
 
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     */
     public function handleRemainingContents(ContextInterface $context, Cursor $cursor)
     {
-        // nothing to do; contents were already added via the constructor.
+        // nothing to do; we already added the contents.
     }
 }

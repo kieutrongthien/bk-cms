@@ -15,16 +15,16 @@
 namespace League\CommonMark\Inline\Renderer;
 
 use League\CommonMark\ElementRendererInterface;
-use League\CommonMark\EnvironmentInterface;
+use League\CommonMark\Environment;
 use League\CommonMark\Inline\Element\AbstractInline;
 use League\CommonMark\Inline\Element\HtmlInline;
+use League\CommonMark\Util\Configuration;
 use League\CommonMark\Util\ConfigurationAwareInterface;
-use League\CommonMark\Util\ConfigurationInterface;
 
-final class HtmlInlineRenderer implements InlineRendererInterface, ConfigurationAwareInterface
+class HtmlInlineRenderer implements InlineRendererInterface, ConfigurationAwareInterface
 {
     /**
-     * @var ConfigurationInterface
+     * @var Configuration
      */
     protected $config;
 
@@ -37,21 +37,29 @@ final class HtmlInlineRenderer implements InlineRendererInterface, Configuration
     public function render(AbstractInline $inline, ElementRendererInterface $htmlRenderer)
     {
         if (!($inline instanceof HtmlInline)) {
-            throw new \InvalidArgumentException('Incompatible inline type: ' . \get_class($inline));
+            throw new \InvalidArgumentException('Incompatible inline type: ' . get_class($inline));
         }
 
-        if ($this->config->get('html_input') === EnvironmentInterface::HTML_INPUT_STRIP) {
+        // Kept for BC reasons
+        if ($this->config->getConfig('safe') === true) {
             return '';
         }
 
-        if ($this->config->get('html_input') === EnvironmentInterface::HTML_INPUT_ESCAPE) {
-            return \htmlspecialchars($inline->getContent(), \ENT_NOQUOTES);
+        if ($this->config->getConfig('html_input') === Environment::HTML_INPUT_STRIP) {
+            return '';
+        }
+
+        if ($this->config->getConfig('html_input') === Environment::HTML_INPUT_ESCAPE) {
+            return htmlspecialchars($inline->getContent(), ENT_NOQUOTES);
         }
 
         return $inline->getContent();
     }
 
-    public function setConfiguration(ConfigurationInterface $configuration)
+    /**
+     * @param Configuration $configuration
+     */
+    public function setConfiguration(Configuration $configuration)
     {
         $this->config = $configuration;
     }

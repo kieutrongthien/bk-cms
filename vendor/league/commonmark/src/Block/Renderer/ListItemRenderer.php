@@ -16,12 +16,10 @@ namespace League\CommonMark\Block\Renderer;
 
 use League\CommonMark\Block\Element\AbstractBlock;
 use League\CommonMark\Block\Element\ListItem;
-use League\CommonMark\Block\Element\Paragraph;
 use League\CommonMark\ElementRendererInterface;
-use League\CommonMark\Extension\TaskList\TaskListItemMarker;
 use League\CommonMark\HtmlElement;
 
-final class ListItemRenderer implements BlockRendererInterface
+class ListItemRenderer implements BlockRendererInterface
 {
     /**
      * @param ListItem                 $block
@@ -30,31 +28,27 @@ final class ListItemRenderer implements BlockRendererInterface
      *
      * @return string
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof ListItem)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
         $contents = $htmlRenderer->renderBlocks($block->children(), $inTightList);
-        if (\substr($contents, 0, 1) === '<' && !$this->startsTaskListItem($block)) {
+        if (substr($contents, 0, 1) === '<') {
             $contents = "\n" . $contents;
         }
-        if (\substr($contents, -1, 1) === '>') {
+        if (substr($contents, -1, 1) === '>') {
             $contents .= "\n";
         }
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         $li = new HtmlElement('li', $attrs, $contents);
 
         return $li;
-    }
-
-    private function startsTaskListItem(ListItem $block): bool
-    {
-        $firstChild = $block->firstChild();
-
-        return $firstChild instanceof Paragraph && $firstChild->firstChild() instanceof TaskListItemMarker;
     }
 }

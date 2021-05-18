@@ -19,15 +19,21 @@ use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 use League\CommonMark\Util\RegexHelper;
 
-final class ThematicBreakParser implements BlockParserInterface
+class ThematicBreakParser extends AbstractBlockParser
 {
-    public function parse(ContextInterface $context, Cursor $cursor): bool
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     *
+     * @return bool
+     */
+    public function parse(ContextInterface $context, Cursor $cursor)
     {
         if ($cursor->isIndented()) {
             return false;
         }
 
-        $match = RegexHelper::matchAt(RegexHelper::REGEX_THEMATIC_BREAK, $cursor->getLine(), $cursor->getNextNonSpacePosition());
+        $match = RegexHelper::matchAt(RegexHelper::getInstance()->getThematicBreakRegex(), $cursor->getLine(), $cursor->getNextNonSpacePosition());
         if ($match === null) {
             return false;
         }

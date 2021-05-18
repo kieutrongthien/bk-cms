@@ -24,7 +24,7 @@ interface InlineRendererInterface
      * @param AbstractInline           $inline
      * @param ElementRendererInterface $htmlRenderer
      *
-     * @return HtmlElement|string|null
+     * @return HtmlElement|string
      */
     public function render(AbstractInline $inline, ElementRendererInterface $htmlRenderer);
 }

@@ -3,7 +3,6 @@
 namespace Nwidart\Modules\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
@@ -26,19 +25,17 @@ class PublishConfigurationCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         if ($module = $this->argument('module')) {
             $this->publishConfiguration($module);
 
-            return 0;
+            return;
         }
 
-        foreach ($this->laravel['modules']->allEnabled() as $module) {
+        foreach ($this->laravel['modules']->enabled() as $module) {
             $this->publishConfiguration($module->getName());
         }
-
-        return 0;
     }
 
     /**
@@ -48,7 +45,7 @@ class PublishConfigurationCommand extends Command
     private function getServiceProviderForModule($module)
     {
         $namespace = $this->laravel['config']->get('modules.namespace');
-        $studlyName = Str::studly($module);
+        $studlyName = studly_case($module);
 
         return "$namespace\\$studlyName\\Providers\\{$studlyName}ServiceProvider";
     }

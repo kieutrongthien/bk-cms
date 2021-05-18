@@ -18,29 +18,31 @@ use League\CommonMark\Block\Element\AbstractBlock;
 use League\CommonMark\Block\Element\IndentedCode;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\HtmlElement;
-use League\CommonMark\Util\Xml;
 
-final class IndentedCodeRenderer implements BlockRendererInterface
+class IndentedCodeRenderer implements BlockRendererInterface
 {
     /**
-     * @param IndentedCode             $block
+     * @param AbstractBlock            $block
      * @param ElementRendererInterface $htmlRenderer
      * @param bool                     $inTightList
      *
      * @return HtmlElement
      */
-    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, bool $inTightList = false)
+    public function render(AbstractBlock $block, ElementRendererInterface $htmlRenderer, $inTightList = false)
     {
         if (!($block instanceof IndentedCode)) {
-            throw new \InvalidArgumentException('Incompatible block type: ' . \get_class($block));
+            throw new \InvalidArgumentException('Incompatible block type: ' . get_class($block));
         }
 
-        $attrs = $block->getData('attributes', []);
+        $attrs = [];
+        foreach ($block->getData('attributes', []) as $key => $value) {
+            $attrs[$key] = $htmlRenderer->escape($value, true);
+        }
 
         return new HtmlElement(
             'pre',
             [],
-            new HtmlElement('code', $attrs, Xml::escape($block->getStringContent()))
+            new HtmlElement('code', $attrs, $htmlRenderer->escape($block->getStringContent()))
         );
     }
 }

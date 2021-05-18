@@ -34,15 +34,11 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected $description = 'Create a new model for the specified module.';
 
-    public function handle() : int
+    public function handle()
     {
-        if (parent::handle() === E_ERROR) {
-            return E_ERROR;
-        }
+        parent::handle();
 
         $this->handleOptionalMigrationOption();
-
-        return 0;
     }
 
     /**
@@ -166,8 +162,6 @@ class ModelMakeCommand extends GeneratorCommand
      */
     public function getDefaultNamespace() : string
     {
-        $module = $this->laravel['modules'];
-
-        return $module->config('paths.generator.model.namespace') ?: $module->config('paths.generator.model.path', 'Entities');
+        return $this->laravel['modules']->config('paths.generator.model.path', 'Entities');
     }
 }

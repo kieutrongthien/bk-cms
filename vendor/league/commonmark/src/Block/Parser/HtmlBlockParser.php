@@ -20,9 +20,15 @@ use League\CommonMark\ContextInterface;
 use League\CommonMark\Cursor;
 use League\CommonMark\Util\RegexHelper;
 
-final class HtmlBlockParser implements BlockParserInterface
+class HtmlBlockParser extends AbstractBlockParser
 {
-    public function parse(ContextInterface $context, Cursor $cursor): bool
+    /**
+     * @param ContextInterface $context
+     * @param Cursor           $cursor
+     *
+     * @return bool
+     */
+    public function parse(ContextInterface $context, Cursor $cursor)
     {
         if ($cursor->isIndented()) {
             return false;

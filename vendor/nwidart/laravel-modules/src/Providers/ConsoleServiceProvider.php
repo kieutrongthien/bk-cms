@@ -3,10 +3,7 @@
 namespace Nwidart\Modules\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Nwidart\Modules\Commands\CommandMakeCommand;
-use Nwidart\Modules\Commands\ComponentClassMakeCommand;
-use Nwidart\Modules\Commands\ComponentViewMakeCommand;
 use Nwidart\Modules\Commands\ControllerMakeCommand;
 use Nwidart\Modules\Commands\DisableCommand;
 use Nwidart\Modules\Commands\DumpCommand;
@@ -15,7 +12,6 @@ use Nwidart\Modules\Commands\EventMakeCommand;
 use Nwidart\Modules\Commands\FactoryMakeCommand;
 use Nwidart\Modules\Commands\InstallCommand;
 use Nwidart\Modules\Commands\JobMakeCommand;
-use Nwidart\Modules\Commands\LaravelModulesV6Migrator;
 use Nwidart\Modules\Commands\ListCommand;
 use Nwidart\Modules\Commands\ListenerMakeCommand;
 use Nwidart\Modules\Commands\MailMakeCommand;
@@ -27,7 +23,6 @@ use Nwidart\Modules\Commands\MigrateRollbackCommand;
 use Nwidart\Modules\Commands\MigrateStatusCommand;
 use Nwidart\Modules\Commands\MigrationMakeCommand;
 use Nwidart\Modules\Commands\ModelMakeCommand;
-use Nwidart\Modules\Commands\ModuleDeleteCommand;
 use Nwidart\Modules\Commands\ModuleMakeCommand;
 use Nwidart\Modules\Commands\NotificationMakeCommand;
 use Nwidart\Modules\Commands\PolicyMakeCommand;
@@ -50,14 +45,11 @@ use Nwidart\Modules\Commands\UseCommand;
 
 class ConsoleServiceProvider extends ServiceProvider
 {
-    /**
-     * Namespace of the console commands
-     * @var string
-     */
-    protected $consoleNamespace = "Nwidart\\Modules\\Commands";
+    protected $defer = false;
 
     /**
      * The available commands
+     *
      * @var array
      */
     protected $commands = [
@@ -76,7 +68,6 @@ class ConsoleServiceProvider extends ServiceProvider
         RouteProviderMakeCommand::class,
         InstallCommand::class,
         ListCommand::class,
-        ModuleDeleteCommand::class,
         ModuleMakeCommand::class,
         FactoryMakeCommand::class,
         PolicyMakeCommand::class,
@@ -101,31 +92,23 @@ class ConsoleServiceProvider extends ServiceProvider
         UseCommand::class,
         ResourceMakeCommand::class,
         TestMakeCommand::class,
-        LaravelModulesV6Migrator::class,
-        ComponentClassMakeCommand::class,
-        ComponentViewMakeCommand::class,
     ];
 
-    public function register(): void
+    /**
+     * Register the commands.
+     */
+    public function register()
     {
-        $this->commands($this->resolveCommands());
+        $this->commands($this->commands);
     }
 
-    private function resolveCommands(): array
+    /**
+     * @return array
+     */
+    public function provides()
     {
-        $commands = [];
+        $provides = $this->commands;
 
-        foreach (config('modules.commands', $this->commands) as $command) {
-            $commands[] = Str::contains($command, $this->consoleNamespace) ?
-                $command :
-                $this->consoleNamespace . "\\" . $command;
-        }
-
-        return $commands;
-    }
-
-    public function provides(): array
-    {
-        return $this->commands;
+        return $provides;
     }
 }

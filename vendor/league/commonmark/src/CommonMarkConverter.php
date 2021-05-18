@@ -20,41 +20,18 @@ namespace League\CommonMark;
 class CommonMarkConverter extends Converter
 {
     /**
-     * The currently-installed version.
-     *
-     * This might be a typical `x.y.z` version, or `x.y-dev`.
-     *
-     * @deprecated in 1.5.0 and will be removed from 2.0.0.
-     *   Use \Composer\InstalledVersions provided by composer-runtime-api instead.
-     */
-    public const VERSION = '1.5.8';
-
-    /** @var EnvironmentInterface */
-    protected $environment;
-
-    /**
      * Create a new commonmark converter instance.
      *
-     * @param array<string, mixed>      $config
-     * @param EnvironmentInterface|null $environment
+     * @param array            $config
+     * @param Environment|null $environment
      */
-    public function __construct(array $config = [], EnvironmentInterface $environment = null)
+    public function __construct(array $config = [], Environment $environment = null)
     {
         if ($environment === null) {
             $environment = Environment::createCommonMarkEnvironment();
         }
 
-        if ($environment instanceof ConfigurableEnvironmentInterface) {
-            $environment->mergeConfig($config);
-        }
-
-        $this->environment = $environment;
-
+        $environment->mergeConfig($config);
         parent::__construct(new DocParser($environment), new HtmlRenderer($environment));
-    }
-
-    public function getEnvironment(): EnvironmentInterface
-    {
-        return $this->environment;
     }
 }

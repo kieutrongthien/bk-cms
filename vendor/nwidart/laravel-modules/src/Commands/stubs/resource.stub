@@ -2,9 +2,9 @@
 
 namespace $NAMESPACE$;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\Resource;
 
-class $CLASS$ extends JsonResource
+class $CLASS$ extends Resource
 {
     /**
      * Transform the resource into an array.

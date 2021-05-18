@@ -3,7 +3,6 @@
 namespace Nwidart\Modules\Commands;
 
 use Illuminate\Console\Command;
-use Nwidart\Modules\Contracts\ActivatorInterface;
 use Nwidart\Modules\Generators\ModuleGenerator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -27,29 +26,20 @@ class ModuleMakeCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         $names = $this->argument('name');
-        $success = true;
 
         foreach ($names as $name) {
-            $code = with(new ModuleGenerator($name))
+            with(new ModuleGenerator($name))
                 ->setFilesystem($this->laravel['files'])
                 ->setModule($this->laravel['modules'])
                 ->setConfig($this->laravel['config'])
-                ->setActivator($this->laravel[ActivatorInterface::class])
                 ->setConsole($this)
                 ->setForce($this->option('force'))
-                ->setType($this->getModuleType())
-                ->setActive(!$this->option('disabled'))
+                ->setPlain($this->option('plain'))
                 ->generate();
-
-            if ($code === E_ERROR) {
-                $success = false;
-            }
         }
-
-        return $success ? 0 : E_ERROR;
     }
 
     /**
@@ -68,32 +58,7 @@ class ModuleMakeCommand extends Command
     {
         return [
             ['plain', 'p', InputOption::VALUE_NONE, 'Generate a plain module (without some resources).'],
-            ['api', null, InputOption::VALUE_NONE, 'Generate an api module.'],
-            ['web', null, InputOption::VALUE_NONE, 'Generate a web module.'],
-            ['disabled', 'd', InputOption::VALUE_NONE, 'Do not enable the module at creation.'],
-            ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when the module already exists.'],
+            ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when module already exist.'],
         ];
-    }
-
-    /**
-    * Get module type .
-    *
-    * @return string
-    */
-    private function getModuleType()
-    {
-        $isPlain = $this->option('plain');
-        $isApi = $this->option('api');
-
-        if ($isPlain && $isApi) {
-            return 'web';
-        }
-        if ($isPlain) {
-            return 'plain';
-        } elseif ($isApi) {
-            return 'api';
-        } else {
-            return 'web';
-        }
     }
 }

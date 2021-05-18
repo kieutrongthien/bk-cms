@@ -1,6 +1,4 @@
-<?php
-
-namespace Barryvdh\Debugbar\Controllers;
+<?php namespace Barryvdh\Debugbar\Controllers;
 
 use Barryvdh\Debugbar\Support\Clockwork\Converter;
 use DebugBar\OpenHandler;

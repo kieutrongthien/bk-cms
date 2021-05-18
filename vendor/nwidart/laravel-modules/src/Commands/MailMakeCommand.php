@@ -2,7 +2,6 @@
 
 namespace Nwidart\Modules\Commands;
 
-use Illuminate\Support\Str;
 use Nwidart\Modules\Support\Config\GenerateConfigReader;
 use Nwidart\Modules\Support\Stub;
 use Nwidart\Modules\Traits\ModuleCommandTrait;
@@ -30,9 +29,7 @@ class MailMakeCommand extends GeneratorCommand
 
     public function getDefaultNamespace() : string
     {
-        $module = $this->laravel['modules'];
-
-        return $module->config('paths.generator.emails.namespace') ?: $module->config('paths.generator.emails.path', 'Emails');
+        return $this->laravel['modules']->config('paths.generator.emails.path', 'Emails');
     }
 
     /**
@@ -82,6 +79,6 @@ class MailMakeCommand extends GeneratorCommand
      */
     private function getFileName()
     {
-        return Str::studly($this->argument('name'));
+        return studly_case($this->argument('name'));
     }
 }

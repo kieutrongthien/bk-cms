@@ -16,9 +16,6 @@ namespace League\CommonMark;
 
 use League\CommonMark\Block\Element\AbstractBlock;
 
-/**
- * @internal
- */
 class UnmatchedBlockCloser
 {
     /**
@@ -48,42 +45,30 @@ class UnmatchedBlockCloser
 
     /**
      * @param AbstractBlock $block
-     *
-     * @return void
      */
     public function setLastMatchedContainer(AbstractBlock $block)
     {
         $this->lastMatchedContainer = $block;
     }
 
-    /**
-     * @return void
-     */
     public function closeUnmatchedBlocks()
     {
-        $endLine = $this->context->getLineNumber() - 1;
-
         while ($this->oldTip !== $this->lastMatchedContainer) {
-            /** @var AbstractBlock $oldTip */
             $oldTip = $this->oldTip->parent();
-            $this->oldTip->finalize($this->context, $endLine);
+            $this->oldTip->finalize($this->context, $this->context->getLineNumber() - 1);
             $this->oldTip = $oldTip;
         }
     }
 
-    /**
-     * @return void
-     */
     public function resetTip()
     {
-        if ($this->context->getTip() === null) {
-            throw new \RuntimeException('No tip to reset to');
-        }
-
         $this->oldTip = $this->context->getTip();
     }
 
-    public function areAllClosed(): bool
+    /**
+     * @return bool
+     */
+    public function areAllClosed()
     {
         return $this->context->getTip() === $this->lastMatchedContainer;
     }

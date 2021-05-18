@@ -26,17 +26,15 @@ class PublishCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle() : int
+    public function handle()
     {
         if ($name = $this->argument('module')) {
             $this->publish($name);
 
-            return 0;
+            return;
         }
 
         $this->publishAll();
-
-        return 0;
     }
 
     /**
@@ -44,7 +42,7 @@ class PublishCommand extends Command
      */
     public function publishAll()
     {
-        foreach ($this->laravel['modules']->allEnabled() as $module) {
+        foreach ($this->laravel['modules']->enabled() as $module) {
             $this->publish($module);
         }
     }

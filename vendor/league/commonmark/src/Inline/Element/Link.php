@@ -16,11 +16,16 @@ namespace League\CommonMark\Inline\Element;
 
 class Link extends AbstractWebResource
 {
-    public function __construct(string $url, ?string $label = null, ?string $title = null)
+    /**
+     * @param string      $url
+     * @param string|null $label
+     * @param string      $title
+     */
+    public function __construct($url, $label = null, $title = '')
     {
         parent::__construct($url);
 
-        if (!empty($label)) {
+        if (is_string($label)) {
             $this->appendChild(new Text($label));
         }
 

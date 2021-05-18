@@ -11,11 +11,9 @@ return [
     | framework when an event needs to be broadcast. You may set this to
     | any of the connections defined in the "connections" array below.
     |
-    | Supported: "pusher", "ably", "redis", "log", "null"
-    |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'pusher'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,14 +34,9 @@ return [
             'secret' => env('PUSHER_APP_SECRET'),
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => true,
+                'cluster' => env('PUSHER_APP_CLUSTER', 'eu'),
+                'encrypted' => env('PUSHER_APP_ENCRYPTED', true),
             ],
-        ],
-
-        'ably' => [
-            'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
         ],
 
         'redis' => [
@@ -53,10 +46,6 @@ return [
 
         'log' => [
             'driver' => 'log',
-        ],
-
-        'null' => [
-            'driver' => 'null',
         ],
 
     ],

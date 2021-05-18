@@ -14,53 +14,62 @@
 
 namespace League\CommonMark\Reference;
 
-use League\CommonMark\Normalizer\TextNormalizer;
-
 /**
  * A collection of references, indexed by label
  */
-final class ReferenceMap implements ReferenceMapInterface
+class ReferenceMap
 {
-    /** @var TextNormalizer */
-    private $normalizer;
+    /**
+     * @var Reference[]
+     */
+    protected $references = [];
 
     /**
-     * @var ReferenceInterface[]
+     * @param Reference $reference
+     *
+     * @return $this
      */
-    private $references = [];
-
-    public function __construct()
+    public function addReference(Reference $reference)
     {
-        $this->normalizer = new TextNormalizer();
-    }
-
-    public function addReference(ReferenceInterface $reference): void
-    {
-        $key = $this->normalizer->normalize($reference->getLabel());
-
+        $key = Reference::normalizeReference($reference->getLabel());
         $this->references[$key] = $reference;
+
+        return $this;
     }
 
-    public function contains(string $label): bool
+    /**
+     * @param string $label
+     *
+     * @return bool
+     */
+    public function contains($label)
     {
-        $label = $this->normalizer->normalize($label);
+        $label = Reference::normalizeReference($label);
 
         return isset($this->references[$label]);
     }
 
-    public function getReference(string $label): ?ReferenceInterface
+    /**
+     * @param string $label
+     *
+     * @return Reference|null
+     */
+    public function getReference($label)
     {
-        $label = $this->normalizer->normalize($label);
+        $label = Reference::normalizeReference($label);
 
-        if (!isset($this->references[$label])) {
-            return null;
+        if (isset($this->references[$label])) {
+            return $this->references[$label];
         }
-
-        return $this->references[$label];
     }
 
-    public function listReferences(): iterable
+    /**
+     * Lists all registered references.
+     *
+     * @return Reference[]
+     */
+    public function listReferences()
     {
-        return \array_values($this->references);
+        return array_values($this->references);
     }
 }

@@ -25,7 +25,7 @@ class MigrateStatusCommand extends Command
     protected $description = 'Status for all module migrations';
 
     /**
-     * @var \Nwidart\Modules\Contracts\RepositoryInterface
+     * @var \Nwidart\Modules\Repository
      */
     protected $module;
 
@@ -34,7 +34,7 @@ class MigrateStatusCommand extends Command
      *
      * @return mixed
      */
-    public function handle() : int
+    public function handle()
     {
         $this->module = $this->laravel['modules'];
 
@@ -43,17 +43,13 @@ class MigrateStatusCommand extends Command
         if ($name) {
             $module = $this->module->findOrFail($name);
 
-            $this->migrateStatus($module);
-
-            return 0;
+            return $this->migrateStatus($module);
         }
 
         foreach ($this->module->getOrdered($this->option('direction')) as $module) {
             $this->line('Running for module: <info>' . $module->getName() . '</info>');
             $this->migrateStatus($module);
         }
-
-        return 0;
     }
 
     /**
@@ -63,7 +59,7 @@ class MigrateStatusCommand extends Command
      */
     protected function migrateStatus(Module $module)
     {
-        $path = str_replace(base_path(), '', (new Migrator($module, $this->getLaravel()))->getPath());
+        $path = str_replace(base_path(), '', (new Migrator($module))->getPath());
 
         $this->call('migrate:status', [
             '--path' => $path,

@@ -14,10 +14,6 @@
 
 namespace League\CommonMark\Inline\Element;
 
-class Strong extends AbstractInline
+class Strong extends AbstractInlineContainer
 {
-    public function isContainer(): bool
-    {
-        return true;
-    }
 }

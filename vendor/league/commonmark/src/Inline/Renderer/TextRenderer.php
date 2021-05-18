@@ -17,9 +17,8 @@ namespace League\CommonMark\Inline\Renderer;
 use League\CommonMark\ElementRendererInterface;
 use League\CommonMark\Inline\Element\AbstractInline;
 use League\CommonMark\Inline\Element\Text;
-use League\CommonMark\Util\Xml;
 
-final class TextRenderer implements InlineRendererInterface
+class TextRenderer implements InlineRendererInterface
 {
     /**
      * @param Text                     $inline
@@ -30,9 +29,9 @@ final class TextRenderer implements InlineRendererInterface
     public function render(AbstractInline $inline, ElementRendererInterface $htmlRenderer)
     {
         if (!($inline instanceof Text)) {
-            throw new \InvalidArgumentException('Incompatible inline type: ' . \get_class($inline));
+            throw new \InvalidArgumentException('Incompatible inline type: ' . get_class($inline));
         }
 
-        return Xml::escape($inline->getContent());
+        return $htmlRenderer->escape($inline->getContent());
     }
 }
